@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:IPOProcessingSystem.ViewModels"
+             x:Class="IPOProcessingSystem.Views.ApplnsxSummaryPage"
+             x:DataType="vm:ApplnsxSummaryViewModel"
+             Title="{Binding Title}">
+    <Grid RowDefinitions="Auto,*" Padding="24" RowSpacing="16">
+        <VerticalStackLayout Grid.Row="0" Spacing="8">
+            <Label Text="Applnsx Bid Grand Totals" Style="{StaticResource SectionHeader}" />
+            <Button Text="Refresh Totals" Command="{Binding LoadCommand}" WidthRequest="150" HorizontalOptions="Start" />
+        </VerticalStackLayout>
+
+        <Border Grid.Row="1" Stroke="{StaticResource Primary}" StrokeThickness="1" Padding="24" BackgroundColor="#FAFAFA" VerticalOptions="Start">
+            <Grid ColumnDefinitions="200,*" RowDefinitions="Auto,Auto,Auto" RowSpacing="16">
+                <Label Text="Total Applications:" Grid.Row="0" Grid.Column="0" FontAttributes="Bold" FontSize="16" />
+                <Label Text="{Binding TotalApplications, StringFormat='{0:N0}'}" Grid.Row="0" Grid.Column="1" FontSize="16" />
+
+                <Label Text="Total Shares (Debent):" Grid.Row="1" Grid.Column="0" FontAttributes="Bold" FontSize="16" />
+                <Label Text="{Binding TotalDebent, StringFormat='{0:N0}'}" Grid.Row="1" Grid.Column="1" FontSize="16" />
+
+                <Label Text="Total Amount:" Grid.Row="2" Grid.Column="0" FontAttributes="Bold" FontSize="16" />
+                <Label Text="{Binding TotalAmount, StringFormat='₹{0:N2}'}" Grid.Row="2" Grid.Column="1" FontSize="16" TextColor="ForestGreen" FontAttributes="Bold" />
+            </Grid>
+        </Border>
+    </Grid>
+</ContentPage>

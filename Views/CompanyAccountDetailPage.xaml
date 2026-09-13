@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:IPOProcessingSystem.ViewModels"
+             x:Class="IPOProcessingSystem.Views.CompanyAccountDetailPage"
+             x:DataType="vm:CompanyAccountDetailViewModel"
+             Title="{Binding Title}">
+    <ScrollView>
+        <VerticalStackLayout Padding="20" Spacing="14">
+            <Label Text="Company Bank Account Details" Style="{StaticResource SectionHeader}" />
+
+            <Border Stroke="{StaticResource Primary}" StrokeThickness="1" Padding="16" BackgroundColor="#FAFAFA">
+                <VerticalStackLayout Spacing="12">
+                    <Grid ColumnDefinitions="140,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" RowSpacing="10" ColumnSpacing="10">
+                        <Label Text="Bank Name" Grid.Row="0" Grid.Column="0" VerticalOptions="Center" FontAttributes="Bold" />
+                        <Entry Text="{Binding Account.BankName}" Grid.Row="0" Grid.Column="1" Placeholder="Bank Name" />
+
+                        <Label Text="Account Name" Grid.Row="1" Grid.Column="0" VerticalOptions="Center" FontAttributes="Bold" />
+                        <Entry Text="{Binding Account.AccountName}" Grid.Row="1" Grid.Column="1" Placeholder="Account Holder Name" />
+
+                        <Label Text="Account Number" Grid.Row="2" Grid.Column="0" VerticalOptions="Center" FontAttributes="Bold" />
+                        <Entry Text="{Binding Account.AccountNumber}" Grid.Row="2" Grid.Column="1" Placeholder="Account Number" Keyboard="Numeric" />
+
+                        <Label Text="IFSC Code" Grid.Row="3" Grid.Column="0" VerticalOptions="Center" FontAttributes="Bold" />
+                        <Entry Text="{Binding Account.IFSC}" Grid.Row="3" Grid.Column="1" Placeholder="IFSC Code" />
+
+                        <Label Text="MICR Code" Grid.Row="4" Grid.Column="0" VerticalOptions="Center" />
+                        <Entry Text="{Binding Account.MICR}" Grid.Row="4" Grid.Column="1" Placeholder="MICR Code (Optional)" />
+
+                        <Label Text="NEFT Code" Grid.Row="5" Grid.Column="0" VerticalOptions="Center" />
+                        <Entry Text="{Binding Account.NEFTCode}" Grid.Row="5" Grid.Column="1" Placeholder="NEFT Code (Optional)" />
+
+                        <Label Text="Bank Branch" Grid.Row="6" Grid.Column="0" VerticalOptions="Center" />
+                        <Entry Text="{Binding Account.BankBranch}" Grid.Row="6" Grid.Column="1" Placeholder="Branch" />
+
+                        <Label Text="Bank City" Grid.Row="7" Grid.Column="0" VerticalOptions="Center" />
+                        <Entry Text="{Binding Account.BankCity}" Grid.Row="7" Grid.Column="1" Placeholder="City" />
+
+                        <Label Text="Bank Address" Grid.Row="8" Grid.Column="0" VerticalOptions="Center" />
+                        <Entry Text="{Binding Account.Address}" Grid.Row="8" Grid.Column="1" Placeholder="Address" />
+                    </Grid>
+
+                    <HorizontalStackLayout Spacing="12" Margin="0,10,0,0">
+                        <Button Text="SAVE ACCOUNT DETAILS" Command="{Binding SaveCommand}" BackgroundColor="{StaticResource Primary}" />
+                    </HorizontalStackLayout>
+                </VerticalStackLayout>
+            </Border>
+
+            <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" />
+            <Label Text="{Binding StatusMessage}" TextColor="{StaticResource Accent}" FontAttributes="Bold" />
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

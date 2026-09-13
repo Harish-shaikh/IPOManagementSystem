@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:IPOProcessingSystem.ViewModels"
+             xmlns:models="clr-namespace:IPOProcessingSystem.Models"
+             x:Class="IPOProcessingSystem.Views.AllocationPage"
+             x:DataType="vm:AllocationViewModel"
+             Title="{Binding Title}">
+    <Grid RowDefinitions="Auto,*,Auto" Padding="16" RowSpacing="10">
+        <VerticalStackLayout Grid.Row="0" Spacing="8">
+            <Label Text="Final Share Allocation" Style="{StaticResource SectionHeader}" />
+            <HorizontalStackLayout Spacing="10">
+                <Button Text="Load Data" Command="{Binding LoadCommand}" />
+                <Button Text="RUN ALLOTMENT" Command="{Binding RunAllotmentCommand}" BackgroundColor="ForestGreen" />
+                <Button Text="Reset" Command="{Binding ResetCommand}" BackgroundColor="Crimson" />
+            </HorizontalStackLayout>
+            <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" />
+            <Label Text="{Binding StatusMessage}" TextColor="{StaticResource Accent}" FontAttributes="Bold" />
+        </VerticalStackLayout>
+
+        <!-- Allocation Table -->
+        <CollectionView Grid.Row="1" ItemsSource="{Binding Allocations}">
+            <CollectionView.Header>
+                <Grid ColumnDefinitions="140,110,100,110,120" Padding="6" BackgroundColor="{StaticResource Primary}">
+                    <Label Text="CATEGORY" TextColor="White" FontAttributes="Bold" />
+                    <Label Grid.Column="1" Text="DEBENT" TextColor="White" FontAttributes="Bold" />
+                    <Label Grid.Column="2" Text="APPL" TextColor="White" FontAttributes="Bold" />
+                    <Label Grid.Column="3" Text="ALLOT" TextColor="White" FontAttributes="Bold" />
+                    <Label Grid.Column="4" Text="DBAL" TextColor="White" FontAttributes="Bold" />
+                </Grid>
+            </CollectionView.Header>
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="models:Allocation">
+                    <Grid ColumnDefinitions="140,110,100,110,120" Padding="6">
+                        <Label Text="{Binding Category}" FontAttributes="Bold" />
+                        <Label Grid.Column="1" Text="{Binding Debent, StringFormat='{0:N0}'}" />
+                        <Label Grid.Column="2" Text="{Binding Appl, StringFormat='{0:N0}'}" />
+                        <Label Grid.Column="3" Text="{Binding Allot, StringFormat='{0:N0}'}" />
+                        <Label Grid.Column="4" Text="{Binding DBal, StringFormat='₹{0:N2}'}" />
+                    </Grid>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+
+        <!-- Summary Totals Footer -->
+        <Border Grid.Row="2" Stroke="{StaticResource Accent}" StrokeThickness="1" Padding="10" BackgroundColor="#F0F4F8">
+            <Grid ColumnDefinitions="140,110,100,110,120">
+                <Label Text="TOTAL" FontAttributes="Bold" />
+                <Label Grid.Column="1" Text="{Binding GrandTotalDebent, StringFormat='{0:N0}'}" FontAttributes="Bold" />
+                <Label Grid.Column="2" Text="{Binding GrandTotalAppl, StringFormat='{0:N0}'}" FontAttributes="Bold" />
+                <Label Grid.Column="3" Text="{Binding GrandTotalAllot, StringFormat='{0:N0}'}" FontAttributes="Bold" />
+                <Label Grid.Column="4" Text="{Binding GrandTotalDbal, StringFormat='₹{0:N2}'}" FontAttributes="Bold" />
+            </Grid>
+        </Border>
+    </Grid>
+</ContentPage>

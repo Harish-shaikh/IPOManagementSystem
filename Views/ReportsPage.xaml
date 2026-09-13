@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:IPOProcessingSystem.ViewModels"
+             x:Class="IPOProcessingSystem.Views.ReportsPage"
+             x:DataType="vm:ReportsViewModel"
+             Title="{Binding Title}">
+    <ScrollView>
+        <VerticalStackLayout Padding="16" Spacing="12">
+            <Label Text="Post-IPO Process Reports" Style="{StaticResource SectionHeader}" />
+
+            <!-- All in one master button -->
+            <Border Stroke="{StaticResource Primary}" StrokeThickness="2" Padding="14" BackgroundColor="#F0F9FF">
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="Master Report Generation" FontAttributes="Bold" FontSize="16" />
+                    <Label Text="Generate ALL Post-IPO reports simultaneously into output folder." TextColor="#555555" />
+                    <Button Text="GENERATE ALL IN ONE REPORTS" Command="{Binding AllInOneCommand}" BackgroundColor="{StaticResource Primary}" />
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- Individual Report Sections: 3-column grid -->
+            <Grid ColumnDefinitions="*,*,*" ColumnSpacing="12" RowDefinitions="Auto,Auto,Auto" RowSpacing="10">
+
+                <!-- Row 0, Col 0: Bank Summaries -->
+                <Border Grid.Row="0" Grid.Column="0" Stroke="#CCCCCC" StrokeThickness="1" Padding="12" BackgroundColor="#FAFAFA">
+                    <VerticalStackLayout Spacing="8">
+                        <Label Text="Bank Summary Reports" FontAttributes="Bold" />
+                        <Button Text="Bank ASBA Summary" Command="{Binding BankSummaryCommand}" CommandParameter="BANK" />
+                        <Button Text="Member ASBA Summary" Command="{Binding BankSummaryCommand}" CommandParameter="MEMBER" />
+                        <Button Text="UPI ASBA Summary" Command="{Binding BankSummaryCommand}" CommandParameter="UPI" />
+                        <Button Text="CA Summary" Command="{Binding CaSummaryCommand}" />
+                    </VerticalStackLayout>
+                </Border>
+
+                <!-- Row 0, Col 1: Refund Reports -->
+                <Border Grid.Row="0" Grid.Column="1" Stroke="#CCCCCC" StrokeThickness="1" Padding="12" BackgroundColor="#FAFAFA">
+                    <VerticalStackLayout Spacing="8">
+                        <Label Text="Refund Reports" FontAttributes="Bold" />
+                        <Button Text="Refund Summary" Command="{Binding RefundSummaryCommand}" />
+                        <Button Text="Refund Detail" Command="{Binding RefundDetailCommand}" />
+                        <Button Text="Refund Calculation" Command="{Binding RefundCalculationCommand}" />
+                        <Button Text="Technical Rejection Report" Command="{Binding TechnicalRejectionReportCommand}" />
+                    </VerticalStackLayout>
+                </Border>
+
+                <!-- Row 0, Col 2: Allottees Reports -->
+                <Border Grid.Row="0" Grid.Column="2" Stroke="#CCCCCC" StrokeThickness="1" Padding="12" BackgroundColor="#FAFAFA">
+                    <VerticalStackLayout Spacing="8">
+                        <Label Text="Allottees Reports" FontAttributes="Bold" />
+                        <Button Text="All Allottees (Master)" Command="{Binding AllotteesCommand}" BackgroundColor="ForestGreen" />
+                        <Button Text="Top 200 Allottees" Command="{Binding Top200Command}" />
+                        <Button Text="Valid Applicants" Command="{Binding ValidApplicantsCommand}" />
+                    </VerticalStackLayout>
+                </Border>
+
+                <!-- Row 1, Col 0: Distribution / Broker -->
+                <Border Grid.Row="1" Grid.Column="0" Stroke="#CCCCCC" StrokeThickness="1" Padding="12" BackgroundColor="#FAFAFA">
+                    <VerticalStackLayout Spacing="8">
+                        <Label Text="Distribution / Broker Reports" FontAttributes="Bold" />
+                        <Button Text="Broker-Wise Report" Command="{Binding BrokerWiseCommand}" />
+                        <Button Text="Terminal-Wise Report" Command="{Binding TerminalWiseCommand}" />
+                        <Button Text="City / State Wise" Command="{Binding CityStateWiseCommand}" />
+                        <Button Text="Email / Non-Email Count" Command="{Binding EmailNonEmailCountCommand}" />
+                    </VerticalStackLayout>
+                </Border>
+
+                <!-- Row 1, Col 1: NSM Commission + Price Discovery -->
+                <Border Grid.Row="1" Grid.Column="1" Stroke="#CCCCCC" StrokeThickness="1" Padding="12" BackgroundColor="#FAFAFA">
+                    <VerticalStackLayout Spacing="8">
+                        <Label Text="NSM Commission" FontAttributes="Bold" />
+                        <Grid ColumnDefinitions="*,*">
+                            <VerticalStackLayout Grid.Column="0">
+                                <Label Text="Rate:" FontSize="11" />
+                                <Entry Text="{Binding NsmRate}" Keyboard="Numeric" />
+                            </VerticalStackLayout>
+                            <VerticalStackLayout Grid.Column="1">
+                                <Label Text="GST%:" FontSize="11" />
+                                <Entry Text="{Binding NsmGst}" Keyboard="Numeric" />
+                            </VerticalStackLayout>
+                        </Grid>
+                        <Button Text="Generate NSM Commission" Command="{Binding NsmCommissionCommand}" />
+                        <Button Text="Price Discovery Report" Command="{Binding PriceDiscoveryCommand}" />
+                        <Button Text="1% Report" Command="{Binding OnePercentCommand}" />
+                    </VerticalStackLayout>
+                </Border>
+
+                <!-- Row 1, Col 2: ROC Listing + Merge Book -->
+                <Border Grid.Row="1" Grid.Column="2" Stroke="#CCCCCC" StrokeThickness="1" Padding="12" BackgroundColor="#FAFAFA">
+                    <VerticalStackLayout Spacing="8">
+                        <Label Text="ROC Listing + Merge" FontAttributes="Bold" />
+                        <Label Text="Allotment Date:" FontSize="11" />
+                        <DatePicker Date="{Binding RocAllotmentDate}" Format="dd/MM/yyyy" />
+                        <Button Text="Generate ROC List" Command="{Binding RocListCommand}" />
+                        <Button Text="Merge Book" Command="{Binding MergeBookCommand}" />
+                    </VerticalStackLayout>
+                </Border>
+
+                <!-- Row 2, Col 0: FIRC Report -->
+                <Border Grid.Row="2" Grid.Column="0" Stroke="#CCCCCC" StrokeThickness="1" Padding="12" BackgroundColor="#FAFAFA">
+                    <VerticalStackLayout Spacing="8">
+                        <Label Text="FIRC Report" FontAttributes="Bold" />
+                        <Button Text="Generate FIRC Report" Command="{Binding FircReportCommand}" />
+                        <Button Text="Email FIRC to Dev" Command="{Binding EmailFircToDevCommand}" />
+                        <Button Text="Email FIRC to Banks" Command="{Binding EmailFircToBanksCommand}" />
+                    </VerticalStackLayout>
+                </Border>
+
+                <!-- Row 2, Col 1: SMS Data + Bendem Summary -->
+                <Border Grid.Row="2" Grid.Column="1" Stroke="#CCCCCC" StrokeThickness="1" Padding="12" BackgroundColor="#FAFAFA">
+                    <VerticalStackLayout Spacing="8">
+                        <Label Text="SMS Data Export" FontAttributes="Bold" />
+                        <Button Text="SMS Data" Command="{Binding SmsDataCommand}" />
+                        <Button Text="Bendem Summary" Command="{Binding BendemSummaryCommand}" />
+                    </VerticalStackLayout>
+                </Border>
+
+                <!-- Row 2, Col 2: PHY Allotment Intimation -->
+                <Border Grid.Row="2" Grid.Column="2" Stroke="#CCCCCC" StrokeThickness="1" Padding="12" BackgroundColor="#FAFAFA">
+                    <VerticalStackLayout Spacing="8">
+                        <Label Text="PHY Allotment Intimation" FontAttributes="Bold" />
+                        <Label Text="Generate allotment intimation letters for physical applicants." TextColor="#555" FontSize="11" />
+                        <Button Text="PHY Allotment Intimation" Command="{Binding PhyAllotmentIntimationCommand}" BackgroundColor="{StaticResource Primary}" />
+                    </VerticalStackLayout>
+                </Border>
+            </Grid>
+
+            <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" />
+            <Label Text="{Binding StatusMessage}" TextColor="{StaticResource Accent}" FontAttributes="Bold" />
+            <Label Text="{Binding LastExportFolder, StringFormat='Output Folder: {0}'}" TextColor="#333333" />
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

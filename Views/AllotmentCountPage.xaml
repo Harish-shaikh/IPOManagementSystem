@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:IPOProcessingSystem.ViewModels"
+             xmlns:models="clr-namespace:IPOProcessingSystem.Models"
+             x:Class="IPOProcessingSystem.Views.AllotmentCountPage"
+             x:DataType="vm:AllotmentCountViewModel"
+             Title="{Binding Title}">
+    <Grid RowDefinitions="Auto,*,Auto" Padding="16" RowSpacing="10">
+        <VerticalStackLayout Grid.Row="0" Spacing="8">
+            <Label Text="Allotment Count Summary (F1)" Style="{StaticResource SectionHeader}" />
+            <Button Text="Refresh Data" Command="{Binding LoadCommand}" WidthRequest="150" HorizontalOptions="Start" />
+        </VerticalStackLayout>
+
+        <CollectionView Grid.Row="1" ItemsSource="{Binding AllotmentRows}">
+            <CollectionView.Header>
+                <Grid ColumnDefinitions="140,120,120,120" Padding="6" BackgroundColor="{StaticResource Primary}">
+                    <Label Text="CATEGORY" TextColor="White" FontAttributes="Bold" />
+                    <Label Grid.Column="1" Text="APPLICATIONS" TextColor="White" FontAttributes="Bold" />
+                    <Label Grid.Column="2" Text="SHARES APPLIED" TextColor="White" FontAttributes="Bold" />
+                    <Label Grid.Column="3" Text="SHARES ALLOTTED" TextColor="White" FontAttributes="Bold" />
+                </Grid>
+            </CollectionView.Header>
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="models:Allocation">
+                    <Grid ColumnDefinitions="140,120,120,120" Padding="6">
+                        <Label Text="{Binding Category}" FontAttributes="Bold" />
+                        <Label Grid.Column="1" Text="{Binding Appl, StringFormat='{0:N0}'}" />
+                        <Label Grid.Column="2" Text="{Binding Debent, StringFormat='{0:N0}'}" />
+                        <Label Grid.Column="3" Text="{Binding Allot, StringFormat='{0:N0}'}" />
+                    </Grid>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+
+        <Border Grid.Row="2" Stroke="{StaticResource Accent}" StrokeThickness="1" Padding="10" BackgroundColor="#F0F4F8">
+            <HorizontalStackLayout Spacing="30">
+                <Label Text="{Binding TotalCount, StringFormat='Total Applications: {0:N0}'}" FontAttributes="Bold" />
+                <Label Text="{Binding TotalShares, StringFormat='Total Shares Allotted: {0:N0}'}" FontAttributes="Bold" />
+            </HorizontalStackLayout>
+        </Border>
+    </Grid>
+</ContentPage>

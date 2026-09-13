@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:IPOProcessingSystem.ViewModels"
+             xmlns:models="clr-namespace:IPOProcessingSystem.Models"
+             x:Class="IPOProcessingSystem.Views.LuckyNoPage"
+             x:DataType="vm:LuckyNoViewModel"
+             Title="{Binding Title}">
+    <Grid RowDefinitions="Auto,*" Padding="16" RowSpacing="10">
+        <VerticalStackLayout Grid.Row="0" Spacing="8">
+            <Label Text="Lucky No Generation &amp; Import" Style="{StaticResource SectionHeader}" />
+
+            <!-- Action buttons -->
+            <FlexLayout Direction="Row" Wrap="Wrap" AlignItems="Center">
+                <Button Text="Load Data" Command="{Binding LoadCommand}" Margin="4" />
+                <Button Text="Export Lucky No Format" Command="{Binding ExportTemplateCommand}" BackgroundColor="#1B3A6B" Margin="4" />
+                <Button Text="Update Lucky No" Command="{Binding UpdateLuckyNoCommand}" Margin="4" />
+                <Button Text="Lucky No Done" Command="{Binding LuckyNoDoneCommand}" BackgroundColor="ForestGreen" Margin="4" />
+            </FlexLayout>
+
+            <!-- Import Section -->
+            <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
+                <Entry Grid.Column="0" Text="{Binding ImportPath}" Placeholder="Select populated Lucky No Excel file" IsReadOnly="True" />
+                <Button Grid.Column="1" Text="Browse" Command="{Binding BrowseImportCommand}" />
+                <Button Grid.Column="2" Text="Import with Data" Command="{Binding ImportCommand}" BackgroundColor="{StaticResource Accent}" />
+            </Grid>
+
+            <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" />
+            <Label Text="{Binding StatusMessage}" TextColor="{StaticResource Accent}" FontAttributes="Bold" />
+        </VerticalStackLayout>
+
+        <!-- Lucky No Matrix / Table -->
+        <CollectionView Grid.Row="1" ItemsSource="{Binding LuckyNumbers}">
+            <CollectionView.Header>
+                <Grid ColumnDefinitions="60,120,100,100,100,120,100" Padding="6" BackgroundColor="{StaticResource Primary}">
+                    <Label Text="ID" TextColor="White" FontAttributes="Bold" />
+                    <Label Grid.Column="1" Text="Category" TextColor="White" FontAttributes="Bold" />
+                    <Label Grid.Column="2" Text="Search Type" TextColor="White" FontAttributes="Bold" />
+                    <Label Grid.Column="3" Text="Serial From" TextColor="White" FontAttributes="Bold" />
+                    <Label Grid.Column="4" Text="Serial To" TextColor="White" FontAttributes="Bold" />
+                    <Label Grid.Column="5" Text="Random Seed" TextColor="White" FontAttributes="Bold" />
+                    <Label Grid.Column="6" Text="Allocated?" TextColor="White" FontAttributes="Bold" />
+                </Grid>
+            </CollectionView.Header>
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="models:LuckyNumberAllocation">
+                    <Grid ColumnDefinitions="60,120,100,100,100,120,100" Padding="6">
+                        <Label Text="{Binding LuckyId}" />
+                        <Label Grid.Column="1" Text="{Binding Category}" />
+                        <Label Grid.Column="2" Text="{Binding SearchType}" />
+                        <Label Grid.Column="3" Text="{Binding SerialFrom}" />
+                        <Label Grid.Column="4" Text="{Binding SerialTo}" />
+                        <Entry Grid.Column="5" Text="{Binding RandomSeedNumber}" Keyboard="Numeric" />
+                        <Label Grid.Column="6" Text="{Binding AllocatedFlag}" />
+                    </Grid>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+    </Grid>
+</ContentPage>

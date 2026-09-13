@@ -1,0 +1,55 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+	<TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
+
+		<OutputType>Exe</OutputType>
+		<RootNamespace>IPOProcessingSystem</RootNamespace>
+		<UseMaui>true</UseMaui>
+		<SingleProject>true</SingleProject>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+
+		<ApplicationTitle>IPO Processing System</ApplicationTitle>
+		<ApplicationId>com.rta.ipoprocessing</ApplicationId>
+		<ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
+		<ApplicationVersion>1</ApplicationVersion>
+
+		<WindowsPackageType>None</WindowsPackageType>
+		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</SupportedOSPlatformVersion>
+		<TargetPlatformMinVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</TargetPlatformMinVersion>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<MauiIcon Include="Resources\Images\appicon.svg" ForegroundFile="Resources\Images\appiconfg.svg" IsAppIcon="true" Condition="Exists('Resources\Images\appicon.svg')" />
+		<MauiSplashScreen Include="Resources\Images\splash.svg" Color="#1B3A6B" BaseSize="128,128" Condition="Exists('Resources\Images\splash.svg')" />
+		<MauiImage Include="Resources\Images\*" />
+		<MauiFont Include="Resources\Fonts\*" />
+		<MauiAsset Include="Resources\Raw\**" LogicalName="%(RecursiveDir)%(Filename)%(Extension)" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<!-- MAUI Controls -->
+		<PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
+		<PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Microsoft.Extensions.Logging.Debug" Version="8.0.1" />
+
+		<!-- MVVM -->
+		<PackageReference Include="CommunityToolkit.Mvvm" Version="8.3.2" />
+
+		<!-- SQLite: dual approach as per spec (sqlite-net-pcl for fast batch ops, EF Core for LINQ/migrations) -->
+		<PackageReference Include="sqlite-net-pcl" Version="1.9.172" />
+		<PackageReference Include="SQLitePCLRaw.bundle_green" Version="2.1.10" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="8.0.8" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.8">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+
+		<!-- Excel / CSV -->
+		<PackageReference Include="ClosedXML" Version="0.104.1" />
+		<PackageReference Include="CsvHelper" Version="33.0.1" />
+
+		<!-- DI extensions already ship with Maui -->
+	</ItemGroup>
+
+</Project>

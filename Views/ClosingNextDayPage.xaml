@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:IPOProcessingSystem.ViewModels"
+             xmlns:models="clr-namespace:IPOProcessingSystem.Models"
+             x:Class="IPOProcessingSystem.Views.ClosingNextDayPage"
+             x:DataType="vm:ClosingNextDayViewModel"
+             Title="{Binding Title}">
+    <ScrollView>
+        <VerticalStackLayout Padding="16" Spacing="12">
+            <Label Text="Closing's Next Day Process (T+1)" Style="{StaticResource SectionHeader}" />
+
+            <!-- Action Buttons: Process, Map IFSC -->
+            <HorizontalStackLayout Spacing="10">
+                <Button Text="PROCESS" Command="{Binding ProcessCommand}" BackgroundColor="{StaticResource Primary}" />
+                <Button Text="MAPPING IFSC" Command="{Binding MapIfscCommand}" />
+                <Button Text="MERGE BENDEM" Command="{Binding MergeBendemCommand}" BackgroundColor="{StaticResource Accent}" />
+            </HorizontalStackLayout>
+
+            <!-- Bendem Generation Section -->
+            <Border Stroke="{StaticResource Primary}" StrokeThickness="1" Padding="12" BackgroundColor="#FDFDFD">
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="Bendem Generation" FontAttributes="Bold" />
+                    <HorizontalStackLayout Spacing="16">
+                        <Label Text="Depository:" VerticalOptions="Center" />
+                        <RadioButton Content="CDSL" GroupName="DepGroup"
+                                     IsChecked="{Binding Depository, Converter={StaticResource StringEqualsConverter}, ConverterParameter=CDSL}" />
+                        <RadioButton Content="NSDL" GroupName="DepGroup"
+                                     IsChecked="{Binding Depository, Converter={StaticResource StringEqualsConverter}, ConverterParameter=NSDL}" />
+                    </HorizontalStackLayout>
+
+                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                        <Entry Grid.Column="0" Text="{Binding CdslSequenceNo}" Placeholder="CDSL Sequence File Name (e.g. 128307.001)" />
+                        <Button Grid.Column="1" Text="GENERATE BENDEM" Command="{Binding GenerateBendemCommand}" />
+                    </Grid>
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- Bendem Verification Section -->
+            <Border Stroke="{StaticResource Accent}" StrokeThickness="1" Padding="12" BackgroundColor="#FDFDFD">
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="Bendem Verification" FontAttributes="Bold" />
+                    <Grid ColumnDefinitions="*,Auto,Auto,Auto" ColumnSpacing="8">
+                        <Entry Grid.Column="0" Text="{Binding VerifiedFilePath}" Placeholder="Select verified .OUT or return file" IsReadOnly="True" />
+                        <Button Grid.Column="1" Text="Browse" Command="{Binding BrowseVerifiedFileCommand}" />
+                        <Button Grid.Column="2" Text="BENDEM VERIFICATION" Command="{Binding VerifyBendemCommand}" BackgroundColor="ForestGreen" />
+                        <Button Grid.Column="3" Text="Delete Verification" Command="{Binding DeleteVerificationCommand}" BackgroundColor="Crimson" />
+                    </Grid>
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- Bank Summary Section -->
+            <Border Stroke="#CCCCCC" StrokeThickness="1" Padding="12" BackgroundColor="#FDFDFD">
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="Bank Summary" FontAttributes="Bold" />
+                    <HorizontalStackLayout Spacing="16">
+                        <RadioButton Content="BANK ASBA" GroupName="SummaryTypeGroup"
+                                     IsChecked="{Binding BankSummaryType, Converter={StaticResource StringEqualsConverter}, ConverterParameter='BANK ASBA'}" />
+                        <RadioButton Content="MEMBER ASBA" GroupName="SummaryTypeGroup"
+                                     IsChecked="{Binding BankSummaryType, Converter={StaticResource StringEqualsConverter}, ConverterParameter='MEMBER ASBA'}" />
+                        <Button Text="VIEW SUMMARY" Command="{Binding ShowBankSummaryCommand}" />
+                    </HorizontalStackLayout>
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- Status Indicator -->
+            <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" />
+            <Label Text="{Binding StatusMessage}" TextColor="{StaticResource Accent}" FontAttributes="Bold" />
+
+            <!-- Bendem Files Table -->
+            <Label Text="Generated &amp; Verified Bendem Files:" FontAttributes="Bold" Margin="0,8,0,0" />
+            <CollectionView ItemsSource="{Binding BendemFiles}" HeightRequest="200">
+                <CollectionView.Header>
+                    <Grid ColumnDefinitions="60,80,120,*,100" Padding="4" BackgroundColor="{StaticResource Primary}">
+                        <Label Text="ID" TextColor="White" FontAttributes="Bold" />
+                        <Label Grid.Column="1" Text="Depository" TextColor="White" FontAttributes="Bold" />
+                        <Label Grid.Column="2" Text="Sequence No" TextColor="White" FontAttributes="Bold" />
+                        <Label Grid.Column="3" Text="File Path" TextColor="White" FontAttributes="Bold" />
+                        <Label Grid.Column="4" Text="Verified?" TextColor="White" FontAttributes="Bold" />
+                    </Grid>
+                </CollectionView.Header>
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="models:BendemFile">
+                        <Grid ColumnDefinitions="60,80,120,*,100" Padding="4">
+                            <Label Text="{Binding Id}" />
+                            <Label Grid.Column="1" Text="{Binding Depository}" />
+                            <Label Grid.Column="2" Text="{Binding SequenceNo}" />
+                            <Label Grid.Column="3" Text="{Binding GeneratedPath}" LineBreakMode="TailTruncation" />
+                            <Label Grid.Column="4" Text="{Binding VerifiedFlag}" />
+                        </Grid>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

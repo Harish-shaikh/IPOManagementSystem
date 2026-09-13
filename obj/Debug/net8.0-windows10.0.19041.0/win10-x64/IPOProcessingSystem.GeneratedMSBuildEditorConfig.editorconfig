@@ -1,0 +1,162 @@
+is_global = true
+build_property.MvvmToolkitEnableINotifyPropertyChangingSupport = true
+build_property.TargetFramework = net8.0-windows10.0.19041.0
+build_property.TargetPlatformMinVersion = 10.0.17763.0
+build_property.UsingMicrosoftNETSdkWeb = 
+build_property.ProjectTypeGuids = 9A19103F-16F7-4668-BE54-9A1E7A4F7556
+build_property.InvariantGlobalization = 
+build_property.PlatformNeutralAssembly = 
+build_property.EnforceExtendedAnalyzerRules = 
+build_property._SupportedPlatformList = Linux,macOS,Windows
+build_property.RootNamespace = IPOProcessingSystem
+build_property.ProjectDir = D:\DOTNET\IPOApplication\IPOPS\IPOProcessingSystem\IPOProcessingSystem\
+build_property.EnableComHosting = 
+build_property.EnableGeneratedComInterfaceComImportInterop = 
+build_property.CsWinRTAotOptimizerEnabled = true
+build_property.CsWinRTAotExportsEnabled = 
+build_property.CsWinRTRcwFactoryFallbackGeneratorForceOptIn = 
+build_property.CsWinRTRcwFactoryFallbackGeneratorForceOptOut = 
+build_property.CsWinRTCcwLookupTableGeneratorEnabled = true
+build_property.CsWinRTMergeReferencedActivationFactories = 
+build_property.CsWinRTAotWarningLevel = 
+build_property.CsWinRTUseWindowsUIXamlProjections = false
+build_property.EffectiveAnalysisLevelStyle = 8.0
+build_property.EnableCodeStyleSeverity = 
+
+[D:/DOTNET/IPOApplication/IPOPS/IPOProcessingSystem/IPOProcessingSystem/App.xaml]
+build_metadata.AdditionalFiles.GenKind = Xaml
+build_metadata.AdditionalFiles.ManifestResourceName = IPOProcessingSystem.App.xaml
+build_metadata.AdditionalFiles.TargetPath = App.xaml
+build_metadata.AdditionalFiles.RelativePath = App.xaml
+
+[D:/DOTNET/IPOApplication/IPOPS/IPOProcessingSystem/IPOProcessingSystem/AppShell.xaml]
+build_metadata.AdditionalFiles.GenKind = Xaml
+build_metadata.AdditionalFiles.ManifestResourceName = IPOProcessingSystem.AppShell.xaml
+build_metadata.AdditionalFiles.TargetPath = AppShell.xaml
+build_metadata.AdditionalFiles.RelativePath = AppShell.xaml
+
+[D:/DOTNET/IPOApplication/IPOPS/IPOProcessingSystem/IPOProcessingSystem/Resources/Styles/Colors.xaml]
+build_metadata.AdditionalFiles.GenKind = Xaml
+build_metadata.AdditionalFiles.ManifestResourceName = IPOProcessingSystem.Resources.Styles.Colors.xaml
+build_metadata.AdditionalFiles.TargetPath = Resources\Styles\Colors.xaml
+build_metadata.AdditionalFiles.RelativePath = Resources\Styles\Colors.xaml
+
+[D:/DOTNET/IPOApplication/IPOPS/IPOProcessingSystem/IPOProcessingSystem/Resources/Styles/Styles.xaml]
+build_metadata.AdditionalFiles.GenKind = Xaml
+build_metadata.AdditionalFiles.ManifestResourceName = IPOProcessingSystem.Resources.Styles.Styles.xaml
+build_metadata.AdditionalFiles.TargetPath = Resources\Styles\Styles.xaml
+build_metadata.AdditionalFiles.RelativePath = Resources\Styles\Styles.xaml
+
+[D:/DOTNET/IPOApplication/IPOPS/IPOProcessingSystem/IPOProcessingSystem/Views/AllocationPage.xaml]
+build_metadata.AdditionalFiles.GenKind = Xaml
+build_metadata.AdditionalFiles.ManifestResourceName = IPOProcessingSystem.Views.AllocationPage.xaml
+build_metadata.AdditionalFiles.TargetPath = Views\AllocationPage.xaml
+build_metadata.AdditionalFiles.RelativePath = Views\AllocationPage.xaml
+
+[D:/DOTNET/IPOApplication/IPOPS/IPOProcessingSystem/IPOProcessingSystem/Views/AllotmentCountPage.xaml]
+build_metadata.AdditionalFiles.GenKind = Xaml
+build_metadata.AdditionalFiles.ManifestResourceName = IPOProcessingSystem.Views.AllotmentCountPage.xaml
+build_metadata.AdditionalFiles.TargetPath = Views\AllotmentCountPage.xaml
+build_metadata.AdditionalFiles.RelativePath = Views\AllotmentCountPage.xaml
+
+[D:/DOTNET/IPOApplication/IPOPS/IPOProcessingSystem/IPOProcessingSystem/Views/ApplnsxSummaryPage.xaml]
+build_metadata.AdditionalFiles.GenKind = Xaml
+build_metadata.AdditionalFiles.ManifestResourceName = IPOProcessingSystem.Views.ApplnsxSummaryPage.xaml
+build_metadata.AdditionalFiles.TargetPath = Views\ApplnsxSummaryPage.xaml
+build_metadata.AdditionalFiles.RelativePath = Views\ApplnsxSummaryPage.xaml
+
+[D:/DOTNET/IPOApplication/IPOPS/IPOProcessingSystem/IPOProcessingSystem/Views/BasisAllotmentPage.xaml]
+build_metadata.AdditionalFiles.GenKind = Xaml
+build_metadata.AdditionalFiles.ManifestResourceName = IPOProcessingSystem.Views.BasisAllotmentPage.xaml
+build_metadata.AdditionalFiles.TargetPath = Views\BasisAllotmentPage.xaml
+build_metadata.AdditionalFiles.RelativePath = Views\BasisAllotmentPage.xaml
+
+[D:/DOTNET/IPOApplication/IPOPS/IPOProcessingSystem/IPOProcessingSystem/Views/BidUploadPage.xaml]
+build_metadata.AdditionalFiles.GenKind = Xaml
+build_metadata.AdditionalFiles.ManifestResourceName = IPOProcessingSystem.Views.BidUploadPage.xaml
+build_metadata.AdditionalFiles.TargetPath = Views\BidUploadPage.xaml
+build_metadata.AdditionalFiles.RelativePath = Views\BidUploadPage.xaml
+
+[D:/DOTNET/IPOApplication/IPOPS/IPOProcessingSystem/IPOProcessingSystem/Views/ClosingNextDayPage.xaml]
+build_metadata.AdditionalFiles.GenKind = Xaml
+build_metadata.AdditionalFiles.ManifestResourceName = IPOProcessingSystem.Views.ClosingNextDayPage.xaml
+build_metadata.AdditionalFiles.TargetPath = Views\ClosingNextDayPage.xaml
+build_metadata.AdditionalFiles.RelativePath = Views\ClosingNextDayPage.xaml
+
+[D:/DOTNET/IPOApplication/IPOPS/IPOProcessingSystem/IPOProcessingSystem/Views/CompanyAccountDetailPage.xaml]
+build_metadata.AdditionalFiles.GenKind = Xaml
+build_metadata.AdditionalFiles.ManifestResourceName = IPOProcessingSystem.Views.CompanyAccountDetailPage.xaml
+build_metadata.AdditionalFiles.TargetPath = Views\CompanyAccountDetailPage.xaml
+build_metadata.AdditionalFiles.RelativePath = Views\CompanyAccountDetailPage.xaml
+
+[D:/DOTNET/IPOApplication/IPOPS/IPOProcessingSystem/IPOProcessingSystem/Views/CompanyMasterPage.xaml]
+build_metadata.AdditionalFiles.GenKind = Xaml
+build_metadata.AdditionalFiles.ManifestResourceName = IPOProcessingSystem.Views.CompanyMasterPage.xaml
+build_metadata.AdditionalFiles.TargetPath = Views\CompanyMasterPage.xaml
+build_metadata.AdditionalFiles.RelativePath = Views\CompanyMasterPage.xaml
+
+[D:/DOTNET/IPOApplication/IPOPS/IPOProcessingSystem/IPOProcessingSystem/Views/DataTransferPage.xaml]
+build_metadata.AdditionalFiles.GenKind = Xaml
+build_metadata.AdditionalFiles.ManifestResourceName = IPOProcessingSystem.Views.DataTransferPage.xaml
+build_metadata.AdditionalFiles.TargetPath = Views\DataTransferPage.xaml
+build_metadata.AdditionalFiles.RelativePath = Views\DataTransferPage.xaml
+
+[D:/DOTNET/IPOApplication/IPOPS/IPOProcessingSystem/IPOProcessingSystem/Views/DayWisePage.xaml]
+build_metadata.AdditionalFiles.GenKind = Xaml
+build_metadata.AdditionalFiles.ManifestResourceName = IPOProcessingSystem.Views.DayWisePage.xaml
+build_metadata.AdditionalFiles.TargetPath = Views\DayWisePage.xaml
+build_metadata.AdditionalFiles.RelativePath = Views\DayWisePage.xaml
+
+[D:/DOTNET/IPOApplication/IPOPS/IPOProcessingSystem/IPOProcessingSystem/Views/FcEmailSenderPage.xaml]
+build_metadata.AdditionalFiles.GenKind = Xaml
+build_metadata.AdditionalFiles.ManifestResourceName = IPOProcessingSystem.Views.FcEmailSenderPage.xaml
+build_metadata.AdditionalFiles.TargetPath = Views\FcEmailSenderPage.xaml
+build_metadata.AdditionalFiles.RelativePath = Views\FcEmailSenderPage.xaml
+
+[D:/DOTNET/IPOApplication/IPOPS/IPOProcessingSystem/IPOProcessingSystem/Views/FooterView.xaml]
+build_metadata.AdditionalFiles.GenKind = Xaml
+build_metadata.AdditionalFiles.ManifestResourceName = IPOProcessingSystem.Views.FooterView.xaml
+build_metadata.AdditionalFiles.TargetPath = Views\FooterView.xaml
+build_metadata.AdditionalFiles.RelativePath = Views\FooterView.xaml
+
+[D:/DOTNET/IPOApplication/IPOPS/IPOProcessingSystem/IPOProcessingSystem/Views/IpoGeneratePage.xaml]
+build_metadata.AdditionalFiles.GenKind = Xaml
+build_metadata.AdditionalFiles.ManifestResourceName = IPOProcessingSystem.Views.IpoGeneratePage.xaml
+build_metadata.AdditionalFiles.TargetPath = Views\IpoGeneratePage.xaml
+build_metadata.AdditionalFiles.RelativePath = Views\IpoGeneratePage.xaml
+
+[D:/DOTNET/IPOApplication/IPOPS/IPOProcessingSystem/IPOProcessingSystem/Views/ListingReportPage.xaml]
+build_metadata.AdditionalFiles.GenKind = Xaml
+build_metadata.AdditionalFiles.ManifestResourceName = IPOProcessingSystem.Views.ListingReportPage.xaml
+build_metadata.AdditionalFiles.TargetPath = Views\ListingReportPage.xaml
+build_metadata.AdditionalFiles.RelativePath = Views\ListingReportPage.xaml
+
+[D:/DOTNET/IPOApplication/IPOPS/IPOProcessingSystem/IPOProcessingSystem/Views/LoginPage.xaml]
+build_metadata.AdditionalFiles.GenKind = Xaml
+build_metadata.AdditionalFiles.ManifestResourceName = IPOProcessingSystem.Views.LoginPage.xaml
+build_metadata.AdditionalFiles.TargetPath = Views\LoginPage.xaml
+build_metadata.AdditionalFiles.RelativePath = Views\LoginPage.xaml
+
+[D:/DOTNET/IPOApplication/IPOPS/IPOProcessingSystem/IPOProcessingSystem/Views/LuckyNoPage.xaml]
+build_metadata.AdditionalFiles.GenKind = Xaml
+build_metadata.AdditionalFiles.ManifestResourceName = IPOProcessingSystem.Views.LuckyNoPage.xaml
+build_metadata.AdditionalFiles.TargetPath = Views\LuckyNoPage.xaml
+build_metadata.AdditionalFiles.RelativePath = Views\LuckyNoPage.xaml
+
+[D:/DOTNET/IPOApplication/IPOPS/IPOProcessingSystem/IPOProcessingSystem/Views/ReconciliationPage.xaml]
+build_metadata.AdditionalFiles.GenKind = Xaml
+build_metadata.AdditionalFiles.ManifestResourceName = IPOProcessingSystem.Views.ReconciliationPage.xaml
+build_metadata.AdditionalFiles.TargetPath = Views\ReconciliationPage.xaml
+build_metadata.AdditionalFiles.RelativePath = Views\ReconciliationPage.xaml
+
+[D:/DOTNET/IPOApplication/IPOPS/IPOProcessingSystem/IPOProcessingSystem/Views/ReportsPage.xaml]
+build_metadata.AdditionalFiles.GenKind = Xaml
+build_metadata.AdditionalFiles.ManifestResourceName = IPOProcessingSystem.Views.ReportsPage.xaml
+build_metadata.AdditionalFiles.TargetPath = Views\ReportsPage.xaml
+build_metadata.AdditionalFiles.RelativePath = Views\ReportsPage.xaml
+
+[D:/DOTNET/IPOApplication/IPOPS/IPOProcessingSystem/IPOProcessingSystem/Views/TechnicalRejectionPage.xaml]
+build_metadata.AdditionalFiles.GenKind = Xaml
+build_metadata.AdditionalFiles.ManifestResourceName = IPOProcessingSystem.Views.TechnicalRejectionPage.xaml
+build_metadata.AdditionalFiles.TargetPath = Views\TechnicalRejectionPage.xaml
+build_metadata.AdditionalFiles.RelativePath = Views\TechnicalRejectionPage.xaml

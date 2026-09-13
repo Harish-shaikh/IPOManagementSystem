@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:IPOProcessingSystem.ViewModels"
+             xmlns:models="clr-namespace:IPOProcessingSystem.Models"
+             x:Class="IPOProcessingSystem.Views.BasisAllotmentPage"
+             x:DataType="vm:BasisAllotmentViewModel"
+             Title="{Binding Title}">
+    <Grid RowDefinitions="Auto,Auto,*" Padding="16" RowSpacing="10">
+        <!-- Header & Action Buttons -->
+        <VerticalStackLayout Grid.Row="0" Spacing="8">
+            <Label Text="Basis of Allotment" Style="{StaticResource SectionHeader}" />
+            <HorizontalStackLayout Spacing="10" VerticalOptions="Center">
+                <Button Text="Load Data" Command="{Binding LoadCommand}" />
+                <Button Text="Process Basis" Command="{Binding ProcessBasisCommand}" BackgroundColor="{StaticResource Primary}" />
+                <Button Text="Edit Row" Command="{Binding EditSelectedRowCommand}" />
+                <Button Text="Lucky Draw" Command="{Binding GenerateLuckyDrawCommand}" />
+                <Button Text="Approve Exchange" Command="{Binding ApproveExchangeCommand}" BackgroundColor="ForestGreen" />
+                <Button Text="Export BSE" Command="{Binding ExportBseCommand}" />
+                <Button Text="Export NSE NetBAS" Command="{Binding ExportNseNetbasCommand}" />
+                <Button Text="Reset" Command="{Binding ResetBasisCommand}" BackgroundColor="Crimson" />
+            </HorizontalStackLayout>
+            <HorizontalStackLayout Spacing="10" VerticalOptions="Center">
+                <Label Text="Filter Category:" VerticalOptions="Center" FontAttributes="Bold" />
+                <Picker Title="Select Category" ItemsSource="{Binding Categories}" SelectedItem="{Binding SelectedCategory}" WidthRequest="180" />
+                <Button Text="Filter" Command="{Binding FilterByCategoryCommand}" />
+            </HorizontalStackLayout>
+            <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" />
+            <Label Text="{Binding StatusMessage}" TextColor="{StaticResource Accent}" FontAttributes="Bold" />
+        </VerticalStackLayout>
+
+        <!-- Edit Selected Row Panel (Visible when IsEditingRow == true) -->
+        <Border Grid.Row="1" IsVisible="{Binding IsEditingRow}" Stroke="{StaticResource Accent}" StrokeThickness="1" Padding="12" BackgroundColor="#F9FAFB">
+            <VerticalStackLayout Spacing="8">
+                <Label Text="Edit Basis Parameters for Selected Row" FontAttributes="Bold" />
+                <Grid ColumnDefinitions="*,*,*,*,*,*,Auto" ColumnSpacing="8" RowDefinitions="Auto,Auto">
+                    <VerticalStackLayout Grid.Column="0">
+                        <Label Text="Category" FontSize="11" />
+                        <Entry Text="{Binding EditCategory}" IsReadOnly="True" />
+                    </VerticalStackLayout>
+                    <VerticalStackLayout Grid.Column="1">
+                        <Label Text="Prop Alloc" FontSize="11" />
+                        <Entry Text="{Binding EditPropAlloc}" Keyboard="Numeric" />
+                    </VerticalStackLayout>
+                    <VerticalStackLayout Grid.Column="2">
+                        <Label Text="M-Lot" FontSize="11" />
+                        <Entry Text="{Binding EditMlot}" Keyboard="Numeric" />
+                    </VerticalStackLayout>
+                    <VerticalStackLayout Grid.Column="3">
+                        <Label Text="No Alto" FontSize="11" />
+                        <Entry Text="{Binding EditNoAlto}" Keyboard="Numeric" />
+                    </VerticalStackLayout>
+                    <VerticalStackLayout Grid.Column="4">
+                        <Label Text="Shr Alto" FontSize="11" />
+                        <Entry Text="{Binding EditShrAlto}" Keyboard="Numeric" />
+                    </VerticalStackLayout>
+                    <VerticalStackLayout Grid.Column="5">
+                        <Label Text="Num / Denom" FontSize="11" />
+                        <HorizontalStackLayout Spacing="4">
+                            <Entry Text="{Binding EditNumerator}" WidthRequest="50" Keyboard="Numeric" />
+                            <Label Text="/" VerticalOptions="Center" />
+                            <Entry Text="{Binding EditDenominator}" WidthRequest="50" Keyboard="Numeric" />
+                        </HorizontalStackLayout>
+                    </VerticalStackLayout>
+                    <HorizontalStackLayout Grid.Column="6" Spacing="6" VerticalOptions="End">
+                        <Button Text="Save" Command="{Binding SaveEditCommand}" BackgroundColor="{StaticResource Primary}" />
+                        <Button Text="Cancel" Command="{Binding HideEditCommand}" />
+                    </HorizontalStackLayout>
+                </Grid>
+            </VerticalStackLayout>
+        </Border>
+
+        <!-- Grid of Basis Rows -->
+        <CollectionView Grid.Row="2" ItemsSource="{Binding FilteredRows}" SelectedItem="{Binding SelectedRow}" SelectionMode="Single">
+            <CollectionView.Header>
+                <Grid ColumnDefinitions="110,70,70,90,100,70,70,90,80,80" Padding="4" BackgroundColor="{StaticResource Primary}">
+                    <Label Text="Category" TextColor="White" FontAttributes="Bold" />
+                    <Label Grid.Column="1" Text="Serial" TextColor="White" FontAttributes="Bold" />
+                    <Label Grid.Column="2" Text="Applns" TextColor="White" FontAttributes="Bold" />
+                    <Label Grid.Column="3" Text="ShrApld" TextColor="White" FontAttributes="Bold" />
+                    <Label Grid.Column="4" Text="PropAlloc" TextColor="White" FontAttributes="Bold" />
+                    <Label Grid.Column="5" Text="MLot" TextColor="White" FontAttributes="Bold" />
+                    <Label Grid.Column="6" Text="NoAlto" TextColor="White" FontAttributes="Bold" />
+                    <Label Grid.Column="7" Text="ShrAlto" TextColor="White" FontAttributes="Bold" />
+                    <Label Grid.Column="8" Text="Excess" TextColor="White" FontAttributes="Bold" />
+                    <Label Grid.Column="9" Text="Shr%" TextColor="White" FontAttributes="Bold" />
+                </Grid>
+            </CollectionView.Header>
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="models:BasisOfAllotment">
+                    <Grid ColumnDefinitions="110,70,70,90,100,70,70,90,80,80" Padding="4">
+                        <Label Text="{Binding Category}" />
+                        <Label Grid.Column="1" Text="{Binding Serial}" />
+                        <Label Grid.Column="2" Text="{Binding Applns}" />
+                        <Label Grid.Column="3" Text="{Binding ShrApld}" />
+                        <Label Grid.Column="4" Text="{Binding PropAlloc}" />
+                        <Label Grid.Column="5" Text="{Binding MLot}" />
+                        <Label Grid.Column="6" Text="{Binding NoAlto}" />
+                        <Label Grid.Column="7" Text="{Binding ShrAlto}" />
+                        <Label Grid.Column="8" Text="{Binding Excess}" />
+                        <Label Grid.Column="9" Text="{Binding ShrPercent, StringFormat='{0:F2}'}" />
+                    </Grid>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+    </Grid>
+</ContentPage>

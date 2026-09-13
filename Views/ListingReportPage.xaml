@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:IPOProcessingSystem.ViewModels"
+             xmlns:models="clr-namespace:IPOProcessingSystem.Models"
+             x:Class="IPOProcessingSystem.Views.ListingReportPage"
+             x:DataType="vm:ListingReportViewModel"
+             Title="{Binding Title}">
+    <ScrollView>
+        <VerticalStackLayout Padding="16" Spacing="12">
+            <Label Text="Listing Reports (NSE / BSE)" Style="{StaticResource SectionHeader}" />
+
+            <!-- Date Parameters & Configuration -->
+            <Border Stroke="{StaticResource Primary}" StrokeThickness="1" Padding="12" BackgroundColor="#FAFAFA">
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="Date Parameters" FontAttributes="Bold" />
+                    <Grid ColumnDefinitions="*,*,*" ColumnSpacing="8">
+                        <VerticalStackLayout Grid.Column="0">
+                            <Label Text="Pre-Issue Date:" FontSize="11" />
+                            <DatePicker Date="{Binding PreIssueDate}" />
+                        </VerticalStackLayout>
+                        <VerticalStackLayout Grid.Column="1">
+                            <Label Text="Issue Date:" FontSize="11" />
+                            <DatePicker Date="{Binding IssueDate}" />
+                        </VerticalStackLayout>
+                        <VerticalStackLayout Grid.Column="2">
+                            <Label Text="Post-Issue Date:" FontSize="11" />
+                            <DatePicker Date="{Binding PostIssueDate}" />
+                        </VerticalStackLayout>
+                    </Grid>
+                    <Label Text="{Binding PostIssueDateNote}" TextColor="DarkOrange" FontAttributes="Italic" />
+                    <Button Text="Generate / Update Issue Data" Command="{Binding GenerateIssueDataCommand}" BackgroundColor="{StaticResource Primary}" />
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- Report Generator -->
+            <Border Stroke="{StaticResource Accent}" StrokeThickness="1" Padding="12" BackgroundColor="#FAFAFA">
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="Generate Listing File" FontAttributes="Bold" />
+                    <HorizontalStackLayout Spacing="16">
+                        <Label Text="Report Type:" VerticalOptions="Center" />
+                        <Picker ItemsSource="{Binding ReportTypes}" SelectedItem="{Binding ReportType}" WidthRequest="150" />
+                        <Label Text="Exchange:" VerticalOptions="Center" />
+                        <Picker ItemsSource="{Binding Exchanges}" SelectedItem="{Binding ReportFor}" WidthRequest="120" />
+                        <Button Text="Generate Listing Report" Command="{Binding GenerateListingReportCommand}" BackgroundColor="ForestGreen" />
+                    </HorizontalStackLayout>
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- Offer For Sale (OFS) Section -->
+            <Border Stroke="#CCCCCC" StrokeThickness="1" Padding="12" BackgroundColor="#FAFAFA">
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="Offer For Sale (OFS)" FontAttributes="Bold" />
+                    <Grid ColumnDefinitions="*,*,Auto" ColumnSpacing="8">
+                        <Entry Grid.Column="0" Text="{Binding OfsClid}" Placeholder="DP / Client ID" />
+                        <Entry Grid.Column="1" Text="{Binding OfsShares}" Placeholder="Shares" Keyboard="Numeric" />
+                        <Button Grid.Column="2" Text="Add OFS Record" Command="{Binding AddOfsRecordCommand}" />
+                    </Grid>
+                    <CollectionView ItemsSource="{Binding OfsRecords}" HeightRequest="150">
+                        <CollectionView.Header>
+                            <Grid ColumnDefinitions="*,*,Auto" Padding="4" BackgroundColor="{StaticResource Primary}">
+                                <Label Text="DP / Client ID" TextColor="White" FontAttributes="Bold" />
+                                <Label Grid.Column="1" Text="Shares" TextColor="White" FontAttributes="Bold" />
+                                <Label Grid.Column="2" Text="Action" TextColor="White" FontAttributes="Bold" />
+                            </Grid>
+                        </CollectionView.Header>
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate x:DataType="models:OfferForSaleRecord">
+                                <Grid ColumnDefinitions="*,*,Auto" Padding="4">
+                                    <Label Text="{Binding DPCL}" />
+                                    <Label Grid.Column="1" Text="{Binding Shares, StringFormat='{0:N0}'}" />
+                                    <Button Grid.Column="2" Text="Delete" BackgroundColor="Crimson"
+                                            Command="{Binding Source={RelativeSource AncestorType={x:Type vm:ListingReportViewModel}}, Path=DeleteOfsRecordCommand}"
+                                            CommandParameter="{Binding .}" />
+                                </Grid>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
+                    <Button Text="Lock / Submit OFS" Command="{Binding SubmitLockOfsCommand}" BackgroundColor="{StaticResource Accent}" />
+                </VerticalStackLayout>
+            </Border>
+
+            <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" />
+            <Label Text="{Binding StatusMessage}" TextColor="{StaticResource Accent}" FontAttributes="Bold" />
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

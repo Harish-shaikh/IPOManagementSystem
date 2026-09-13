@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:IPOProcessingSystem.ViewModels"
+             xmlns:models="clr-namespace:IPOProcessingSystem.Models"
+             x:Class="IPOProcessingSystem.Views.TechnicalRejectionPage"
+             x:DataType="vm:TechnicalRejectionViewModel"
+             Title="{Binding Title}">
+    <Grid RowDefinitions="Auto,*" Padding="16" RowSpacing="10">
+        <!-- Top Toolbar & Filter Controls -->
+        <VerticalStackLayout Grid.Row="0" Spacing="8">
+            <Label Text="Technical Rejection Process" Style="{StaticResource SectionHeader}" />
+            
+            <!-- Rejection Actions Grid -->
+            <FlexLayout Direction="Row" Wrap="Wrap" AlignItems="Center">
+                <Button Text="Load Data" Command="{Binding LoadCommand}" Margin="4" />
+                <Button Text="Promoter PAN" Command="{Binding CheckPromoterPanCommand}" Margin="4" />
+                <Button Text="Revert Promoter" Command="{Binding RevertPromoterPanCommand}" Margin="4" />
+                <Button Text="SEBI Debarred" Command="{Binding CheckSebiDebarredCommand}" Margin="4" />
+                <Button Text="HNI Cut-off" Command="{Binding CheckHniCutOffCommand}" Margin="4" />
+                <Button Text="USA Applicant" Command="{Binding CheckUsaApplicantsCommand}" Margin="4" />
+                <Button Text="Duplicate PAN" Command="{Binding CheckDuplicatePanCommand}" Margin="4" />
+                <Button Text="Multiple PAN" Command="{Binding CheckMultiplePanCommand}" Margin="4" />
+                <Button Text="More Than One" Command="{Binding CheckMoreThanOneCommand}" Margin="4" />
+                <Button Text="Minor Detail" Command="{Binding CheckMinorDetailCommand}" Margin="4" />
+                <Button Text="PAN Mismatch" Command="{Binding CheckPanMismatchCommand}" Margin="4" />
+                <Button Text="Rejection Marking" Command="{Binding RunRejectionMarkingCommand}" BackgroundColor="Orange" Margin="4" />
+                <Button Text="Rejection Confirm" Command="{Binding RejectionConfirmCommand}" BackgroundColor="Crimson" Margin="4" />
+                <Button Text="Web Return" Command="{Binding GenerateWebReturnCommand}" Margin="4" />
+                <Button Text="Export Report" Command="{Binding GenerateReportCommand}" BackgroundColor="{StaticResource Primary}" Margin="4" />
+            </FlexLayout>
+
+            <!-- Inputs for PAN and Cutoff filters -->
+            <Grid ColumnDefinitions="*,Auto,*,Auto" ColumnSpacing="8" RowDefinitions="Auto,Auto">
+                <VerticalStackLayout Grid.Row="0" Grid.Column="0">
+                    <Label Text="Promoter PAN(s) (comma separated):" FontSize="11" />
+                    <Entry Text="{Binding PromoterPans}" Placeholder="e.g. ABCDE1234F,XYZPK5678Q" />
+                </VerticalStackLayout>
+                <VerticalStackLayout Grid.Row="0" Grid.Column="1" VerticalOptions="End">
+                    <Button Text="Check" Command="{Binding CheckPromoterPanCommand}" />
+                </VerticalStackLayout>
+
+                <VerticalStackLayout Grid.Row="0" Grid.Column="2">
+                    <Label Text="SEBI Debarred PAN(s):" FontSize="11" />
+                    <Entry Text="{Binding SebiDebarredPans}" Placeholder="e.g. PAN1,PAN2" />
+                </VerticalStackLayout>
+                <VerticalStackLayout Grid.Row="0" Grid.Column="3" VerticalOptions="End">
+                    <Button Text="Check" Command="{Binding CheckSebiDebarredCommand}" />
+                </VerticalStackLayout>
+
+                <HorizontalStackLayout Grid.Row="1" Grid.ColumnSpan="4" Spacing="16" Margin="0,6,0,0">
+                    <Label Text="HNI Cut-off Date &amp; Time:" VerticalOptions="Center" FontAttributes="Bold" />
+                    <DatePicker Date="{Binding HniCutOffDate}" WidthRequest="130" />
+                    <Entry Text="{Binding HniCutOffTime}" WidthRequest="80" Placeholder="15:00" />
+                    <Button Text="Run HNI Cut-off" Command="{Binding CheckHniCutOffCommand}" />
+                </HorizontalStackLayout>
+            </Grid>
+
+            <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" />
+            <Label Text="{Binding StatusMessage}" TextColor="{StaticResource Accent}" FontAttributes="Bold" />
+        </VerticalStackLayout>
+
+        <!-- Rejections Data Grid -->
+        <CollectionView Grid.Row="1" ItemsSource="{Binding Rejections}" SelectionMode="Single" SelectedItem="{Binding SelectedRejection}">
+            <CollectionView.Header>
+                <Grid ColumnDefinitions="80,110,120,130,120,*" Padding="6" BackgroundColor="{StaticResource Primary}">
+                    <Label Text="Rej ID" TextColor="White" FontAttributes="Bold" />
+                    <Label Grid.Column="1" Text="Form No" TextColor="White" FontAttributes="Bold" />
+                    <Label Grid.Column="2" Text="PAN" TextColor="White" FontAttributes="Bold" />
+                    <Label Grid.Column="3" Text="Reason Code" TextColor="White" FontAttributes="Bold" />
+                    <Label Grid.Column="4" Text="Client ID" TextColor="White" FontAttributes="Bold" />
+                    <Label Grid.Column="5" Text="Remark" TextColor="White" FontAttributes="Bold" />
+                </Grid>
+            </CollectionView.Header>
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="models:TechnicalRejection">
+                    <Grid ColumnDefinitions="80,110,120,130,120,*" Padding="6">
+                        <Label Text="{Binding RejectionId}" />
+                        <Label Grid.Column="1" Text="{Binding FormNo}" />
+                        <Label Grid.Column="2" Text="{Binding PAN}" />
+                        <Label Grid.Column="3" Text="{Binding ReasonCode}" />
+                        <Label Grid.Column="4" Text="{Binding CLID}" />
+                        <Label Grid.Column="5" Text="{Binding Remark}" />
+                    </Grid>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+    </Grid>
+</ContentPage>

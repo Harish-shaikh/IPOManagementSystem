@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:IPOProcessingSystem.ViewModels"
+             xmlns:models="clr-namespace:IPOProcessingSystem.Models"
+             x:Class="IPOProcessingSystem.Views.IpoGeneratePage"
+             x:DataType="vm:IpoGenerateViewModel"
+             Title="{Binding Title}">
+    <Grid RowDefinitions="Auto,*" Padding="20" RowSpacing="12">
+        <VerticalStackLayout Grid.Row="0" Spacing="10">
+            <Label Text="IPO Generation" Style="{StaticResource SectionHeader}" />
+            <Grid ColumnDefinitions="120,*" RowDefinitions="Auto,Auto,Auto,Auto" RowSpacing="8" ColumnSpacing="8">
+                <Label Text="IPO ID" Grid.Row="0" Grid.Column="0" VerticalOptions="Center" />
+                <Entry Grid.Row="0" Grid.Column="1" Text="{Binding IpoId}" Keyboard="Numeric" Placeholder="0 = new IPO" />
+
+                <Label Text="Client ID" Grid.Row="1" Grid.Column="0" VerticalOptions="Center" />
+                <Entry Grid.Row="1" Grid.Column="1" Text="{Binding ClientId}" Keyboard="Numeric" />
+
+                <Label Text="Client Name" Grid.Row="2" Grid.Column="0" VerticalOptions="Center" />
+                <Entry Grid.Row="2" Grid.Column="1" Text="{Binding ClientName}" />
+
+                <Label Text="Issue Type" Grid.Row="3" Grid.Column="0" VerticalOptions="Center" />
+                <HorizontalStackLayout Grid.Row="3" Grid.Column="1" Spacing="16">
+                    <RadioButton Content="SME" GroupName="IssueType" IsChecked="{Binding IssueType, Converter={StaticResource StringEqualsConverter}, ConverterParameter=SME}" />
+                    <RadioButton Content="MAIN BOARD" GroupName="IssueType" IsChecked="{Binding IssueType, Converter={StaticResource StringEqualsConverter}, ConverterParameter='MAIN BOARD'}" />
+                </HorizontalStackLayout>
+            </Grid>
+            <HorizontalStackLayout Spacing="10">
+                <Button Text="Browse Clients (For New IPO)" Command="{Binding BrowseClientsCommand}" BackgroundColor="{StaticResource Accent}" />
+                <Button Text="Load Existing IPOs" Command="{Binding LoadCompaniesCommand}" />
+                <Button Text="Process" Command="{Binding ProcessCommand}" BackgroundColor="{StaticResource Primary}" />
+            </HorizontalStackLayout>
+            <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" />
+            <Label Text="{Binding StatusMessage}" TextColor="{StaticResource Accent}" FontAttributes="Bold" />
+        </VerticalStackLayout>
+
+        <!-- Client Master Modal Panel for New IPOs -->
+        <Border Grid.Row="1" IsVisible="{Binding IsBrowsingClients}" Stroke="{StaticResource Accent}" StrokeThickness="2" Padding="14" BackgroundColor="#FFFFFF">
+            <VerticalStackLayout Spacing="10">
+                <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
+                    <Label Text="Select Client Master (RTA Branch / Client ID / Client Name)" FontAttributes="Bold" FontSize="14" VerticalOptions="Center" />
+                    <Entry Grid.Column="1" Text="{Binding SearchFilter}" Placeholder="Search Client Name (LIKE)..." WidthRequest="240" />
+                    <HorizontalStackLayout Grid.Column="2" Spacing="6">
+                        <Button Text="Search" Command="{Binding BrowseClientsCommand}" />
+                        <Button Text="Close" Command="{Binding CloseClientBrowseCommand}" BackgroundColor="Crimson" />
+                    </HorizontalStackLayout>
+                </Grid>
+                <CollectionView ItemsSource="{Binding Clients}" SelectedItem="{Binding SelectedClient}" SelectionMode="Single" HeightRequest="300">
+                    <CollectionView.Header>
+                        <Grid ColumnDefinitions="140,140,*" Padding="6" BackgroundColor="{StaticResource Primary}">
+                            <Label Text="RTA_Branch_Id" TextColor="White" FontAttributes="Bold" />
+                            <Label Grid.Column="1" Text="Client_Id" TextColor="White" FontAttributes="Bold" />
+                            <Label Grid.Column="2" Text="Client_Name" TextColor="White" FontAttributes="Bold" />
+                        </Grid>
+                    </CollectionView.Header>
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate x:DataType="models:ClientMaster">
+                            <Grid ColumnDefinitions="140,140,*" Padding="6">
+                                <Label Text="{Binding RtaBranchId}" />
+                                <Label Grid.Column="1" Text="{Binding ClientId}" />
+                                <Label Grid.Column="2" Text="{Binding ClientName}" FontAttributes="Bold" />
+                            </Grid>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+            </VerticalStackLayout>
+        </Border>
+
+        <!-- Existing Companies Grid (visible when not browsing clients) -->
+        <CollectionView Grid.Row="1" IsVisible="{Binding IsBrowsingClients, Converter={StaticResource InvertedBoolConverter}}"
+                         ItemsSource="{Binding Companies}"
+                         SelectedItem="{Binding SelectedCompany}"
+                         SelectionMode="Single">
+            <CollectionView.Header>
+                <Grid ColumnDefinitions="80,100,*,120" Padding="6" BackgroundColor="{StaticResource Primary}">
+                    <Label Text="IPO ID" TextColor="White" FontAttributes="Bold" />
+                    <Label Grid.Column="1" Text="Client ID" TextColor="White" FontAttributes="Bold" />
+                    <Label Grid.Column="2" Text="Client Name" TextColor="White" FontAttributes="Bold" />
+                    <Label Grid.Column="3" Text="Type" TextColor="White" FontAttributes="Bold" />
+                </Grid>
+            </CollectionView.Header>
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="models:CompanyMaster">
+                    <Grid ColumnDefinitions="80,100,*,120" Padding="6">
+                        <Label Text="{Binding IPO_ID}" />
+                        <Label Grid.Column="1" Text="{Binding ClientId}" />
+                        <Label Grid.Column="2" Text="{Binding IssuerName}" />
+                        <Label Grid.Column="3" Text="{Binding IssueType}" />
+                    </Grid>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+    </Grid>
+</ContentPage>

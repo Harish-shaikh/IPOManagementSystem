@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:IPOProcessingSystem.ViewModels"
+             x:Class="IPOProcessingSystem.Views.DataTransferPage"
+             x:DataType="vm:DataTransferViewModel"
+             Title="{Binding Title}">
+    <ScrollView>
+        <VerticalStackLayout Padding="16" Spacing="14">
+            <Label Text="Data Transfer (B-Tas &amp; Bigshare Online)" Style="{StaticResource SectionHeader}" />
+
+            <!-- B-Tas Section -->
+            <Border Stroke="{StaticResource Primary}" StrokeThickness="1" Padding="14" BackgroundColor="#FAFAFA">
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="B-Tas Transfer" FontAttributes="Bold" FontSize="16" />
+                    <Label Text="{Binding BtasStatus, StringFormat='Transfer History: {0}'}" TextColor="ForestGreen" FontAttributes="Bold" />
+
+                    <HorizontalStackLayout Spacing="16">
+                        <Label Text="Transfer Type:" VerticalOptions="Center" />
+                        <Picker ItemsSource="{Binding TransferTypes}" SelectedItem="{Binding TransferType}" WidthRequest="150" />
+                        <Label Text="Transfer Date:" VerticalOptions="Center" />
+                        <DatePicker Date="{Binding TransferDate}" WidthRequest="140" />
+                        <Button Text="Transfer To B-Tas" Command="{Binding TransferBtasCommand}" BackgroundColor="{StaticResource Primary}" />
+                    </HorizontalStackLayout>
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- Lock-In Section -->
+            <Border Stroke="{StaticResource Accent}" StrokeThickness="1" Padding="14" BackgroundColor="#FAFAFA">
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="Lock-In Settings" FontAttributes="Bold" FontSize="16" />
+                    <Label Text="⚠ Note: Run both Issue and Post_Issue transfers before updating Lock-in." TextColor="DarkOrange" />
+                    <Grid ColumnDefinitions="*,*,Auto" ColumnSpacing="12">
+                        <VerticalStackLayout Grid.Column="0">
+                            <Label Text="Pre-Issue Date:" FontSize="11" />
+                            <DatePicker Date="{Binding PreIssueDate}" />
+                        </VerticalStackLayout>
+                        <VerticalStackLayout Grid.Column="1">
+                            <Label Text="Post-Issue Date:" FontSize="11" />
+                            <DatePicker Date="{Binding PostIssueDate}" />
+                        </VerticalStackLayout>
+                        <VerticalStackLayout Grid.Column="2" VerticalOptions="End">
+                            <Button Text="UPDATE LOCK-IN" Command="{Binding UpdateLockInCommand}" BackgroundColor="ForestGreen" />
+                        </VerticalStackLayout>
+                    </Grid>
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- Bigshare Online Section -->
+            <Border Stroke="#CCCCCC" StrokeThickness="1" Padding="14" BackgroundColor="#FAFAFA">
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="Bigshare Online Website Transfer" FontAttributes="Bold" FontSize="16" />
+                    <Label Text="{Binding BigshareRecordCount, StringFormat='Allotted Records Count: {0}'}" FontAttributes="Bold" />
+                    <Label Text="Rule: &lt; 20,000 records uses 'Transfer Records'; &gt;= 20,000 records uses 'BackUp'." TextColor="#555555" />
+                    <Button Text="Transfer To Bigshare Online" Command="{Binding TransferBigshareCommand}" BackgroundColor="{StaticResource Accent}" />
+                    <Label Text="{Binding BigshareStatus}" TextColor="ForestGreen" FontAttributes="Bold" />
+                </VerticalStackLayout>
+            </Border>
+
+            <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" />
+            <Label Text="{Binding StatusMessage}" TextColor="{StaticResource Accent}" FontAttributes="Bold" />
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<Shell xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+       xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+       xmlns:views="clr-namespace:IPOProcessingSystem.Views"
+       x:Class="IPOProcessingSystem.AppShell"
+       Title="IPO Process Management System"
+       FlyoutBehavior="Disabled">
+
+    <Shell.FlyoutHeader>
+        <Border BackgroundColor="#1B3A6B" Padding="16,24">
+            <VerticalStackLayout Spacing="4">
+                <Label Text="IPO PROCESS SYSTEM" TextColor="White" FontAttributes="Bold" FontSize="18" />
+                <Label Text="Registrar &amp; Transfer Agent (RTA)" TextColor="#B0BEC5" FontSize="12" />
+            </VerticalStackLayout>
+        </Border>
+    </Shell.FlyoutHeader>
+
+    <Shell.FlyoutFooter>
+        <views:FooterView />
+    </Shell.FlyoutFooter>
+
+    <!-- Login page shown first; flyout is disabled until user logs in -->
+    <ShellContent Title="Login"
+                  ContentTemplate="{DataTemplate views:LoginPage}"
+                  Route="login"
+                  Shell.FlyoutItemIsVisible="False" />
+
+    <!-- 1. PRE-IPO Section -->
+    <FlyoutItem Title="PRE IPO" x:Name="PreIpoFlyoutItem" IsVisible="False">
+        <ShellContent Title="IPO Generate (Ctrl+I)"
+                      ContentTemplate="{DataTemplate views:IpoGeneratePage}"
+                      Route="ipogenerate" />
+        <ShellContent Title="Company Master (Alt+C)"
+                      ContentTemplate="{DataTemplate views:CompanyMasterPage}"
+                      Route="companymaster" />
+    </FlyoutItem>
+
+    <!-- 2. IPO PROCESSING Section -->
+    <FlyoutItem Title="IPO" x:Name="IpoProcessingFlyoutItem" IsVisible="False">
+        <ShellContent Title="NSE/BSE Bid Upload (Alt+S)"
+                      ContentTemplate="{DataTemplate views:BidUploadPage}"
+                      Route="bidupload" />
+        <ShellContent Title="Day Wise Process"
+                      ContentTemplate="{DataTemplate views:DayWisePage}"
+                      Route="daywise" />
+        <ShellContent Title="Closing Next Day (T+1)"
+                      ContentTemplate="{DataTemplate views:ClosingNextDayPage}"
+                      Route="closingnextday" />
+        <ShellContent Title="Bank Reconciliation (T+2)"
+                      ContentTemplate="{DataTemplate views:ReconciliationPage}"
+                      Route="reconciliation" />
+        <ShellContent Title="Technical Rejection (Ctrl+T)"
+                      ContentTemplate="{DataTemplate views:TechnicalRejectionPage}"
+                      Route="technicalrejection" />
+        <ShellContent Title="Basis of Allotment (Ctrl+B)"
+                      ContentTemplate="{DataTemplate views:BasisAllotmentPage}"
+                      Route="basisallotment" />
+        <ShellContent Title="Lucky No (Ctrl+Shift+L)"
+                      ContentTemplate="{DataTemplate views:LuckyNoPage}"
+                      Route="luckyno" />
+        <ShellContent Title="Allocation (Ctrl+Shift+A)"
+                      ContentTemplate="{DataTemplate views:AllocationPage}"
+                      Route="allocation" />
+    </FlyoutItem>
+
+    <!-- 3. POST-IPO Section -->
+    <FlyoutItem Title="POST IPO" x:Name="PostIpoFlyoutItem" IsVisible="False">
+        <ShellContent Title="Reports (Ctrl+Shift+R)"
+                      ContentTemplate="{DataTemplate views:ReportsPage}"
+                      Route="reports" />
+        <ShellContent Title="Listing Report (Alt+L)"
+                      ContentTemplate="{DataTemplate views:ListingReportPage}"
+                      Route="listingreport" />
+        <ShellContent Title="Data Transfer (BTAS / Online)"
+                      ContentTemplate="{DataTemplate views:DataTransferPage}"
+                      Route="datatransfer" />
+        <ShellContent Title="FC Email Sender"
+                      ContentTemplate="{DataTemplate views:FcEmailSenderPage}"
+                      Route="fcemailsender" />
+        <ShellContent Title="Allotment Count (F1)"
+                      ContentTemplate="{DataTemplate views:AllotmentCountPage}"
+                      Route="allotmentcount" />
+        <ShellContent Title="Applnsx Summary"
+                      ContentTemplate="{DataTemplate views:ApplnsxSummaryPage}"
+                      Route="applnsxsummary" />
+    </FlyoutItem>
+
+    <!-- 4. SETTINGS Section -->
+    <FlyoutItem Title="SETTINGS" x:Name="SettingsFlyoutItem" IsVisible="False">
+        <ShellContent Title="Company Account Details"
+                      ContentTemplate="{DataTemplate views:CompanyAccountDetailPage}"
+                      Route="companyaccountdetail" />
+    </FlyoutItem>
+
+    <!-- 5. SYSTEM Section -->
+    <FlyoutItem Title="SYSTEM" x:Name="SystemFlyoutItem" IsVisible="False">
+        <ShellContent Title="Logout"
+                      ContentTemplate="{DataTemplate views:LoginPage}"
+                      Route="logout" />
+    </FlyoutItem>
+
+</Shell>
