@@ -2,6 +2,7 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:vm="clr-namespace:IPOProcessingSystem.ViewModels"
+             xmlns:models="clr-namespace:IPOProcessingSystem.Models"
              x:Class="IPOProcessingSystem.Views.ReportsPage"
              x:DataType="vm:ReportsViewModel"
              Title="{Binding Title}">
@@ -49,6 +50,7 @@
                         <Label Text="Allottees Reports" FontAttributes="Bold" />
                         <Button Text="All Allottees (Master)" Command="{Binding AllotteesCommand}" BackgroundColor="ForestGreen" />
                         <Button Text="Top 200 Allottees" Command="{Binding Top200Command}" />
+                        <Button Text="Allottees Marking" Command="{Binding AlloteesMarkingCommand}" />
                         <Button Text="Valid Applicants" Command="{Binding ValidApplicantsCommand}" />
                     </VerticalStackLayout>
                 </Border>
@@ -123,6 +125,45 @@
                     </VerticalStackLayout>
                 </Border>
             </Grid>
+
+            <!-- ── Email to Banks Panel ── -->
+            <Border Stroke="{StaticResource Primary}" StrokeThickness="2" Padding="14" BackgroundColor="#F0F7FF" Margin="0,4">
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="Email to Banks" FontAttributes="Bold" FontSize="15" />
+
+                    <!-- Select All + Day selector -->
+                    <Grid ColumnDefinitions="Auto,Auto,Auto,*" ColumnSpacing="12">
+                        <CheckBox IsChecked="{Binding SelectAllBanks}" VerticalOptions="Center" />
+                        <Label Grid.Column="1" Text="Select All Banks" VerticalOptions="Center" FontAttributes="Bold" />
+                        <Label Grid.Column="2" Text="Select Day:" VerticalOptions="Center" />
+                        <Picker Grid.Column="3" ItemsSource="{Binding DayList}" SelectedItem="{Binding SelectedEmailDay}" WidthRequest="120" />
+                    </Grid>
+
+                    <!-- Bank checklist -->
+                    <CollectionView ItemsSource="{Binding EmailBanks}" HeightRequest="130" SelectionMode="None">
+                        <CollectionView.ItemsLayout>
+                            <LinearItemsLayout Orientation="Vertical" />
+                        </CollectionView.ItemsLayout>
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate x:DataType="models:BankSelectionItem">
+                                <Grid ColumnDefinitions="36,*" Padding="2">
+                                    <CheckBox IsChecked="{Binding IsSelected}" VerticalOptions="Center" />
+                                    <Label Grid.Column="1" Text="{Binding BankName}" VerticalOptions="Center" />
+                                </Grid>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
+
+                    <!-- Action buttons -->
+                    <FlexLayout Direction="Row" Wrap="Wrap" AlignItems="Center">
+                        <Button Text="DAY WISE DATA"  Command="{Binding EmailDayWiseDataCommand}"  BackgroundColor="{StaticResource Primary}" Margin="4" />
+                        <Button Text="ZIP FILE"        Command="{Binding EmailZipFilesCommand}"     BackgroundColor="#2E7D32"               Margin="4" />
+                        <Button Text="EMAIL TO DEVs"  Command="{Binding EmailToDevsCommand}"       BackgroundColor="{StaticResource Accent}" Margin="4" />
+                        <Button Text="EMAIL TO BANKS" Command="{Binding EmailToBanksCommand}"      BackgroundColor="Crimson"               Margin="4" />
+                        <Button Text="REPORT MAIL"    Command="{Binding ReportMailSendCommand}"    BackgroundColor="Gray"                  Margin="4" />
+                    </FlexLayout>
+                </VerticalStackLayout>
+            </Border>
 
             <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" />
             <Label Text="{Binding StatusMessage}" TextColor="{StaticResource Accent}" FontAttributes="Bold" />

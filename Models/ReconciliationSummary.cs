@@ -49,6 +49,8 @@ public class ReconSession
     [PrimaryKey, AutoIncrement]
     public int Id { get; set; }
     public int IPO_ID { get; set; }
+    [Ignore]
+    public int IPO_Id { get => IPO_ID; set => IPO_ID = value; }
     public string BankCode { get; set; } = string.Empty;
     public string ReconType { get; set; } = "NonASBA"; // ASBA / NonASBA
     public string Status { get; set; } = "Pending";   // Pending / Completed
@@ -69,6 +71,10 @@ public class RejectionRecord
     [PrimaryKey, AutoIncrement]
     public int Id { get; set; }
     public int IPO_ID { get; set; }
+    [Ignore]
+    public int IPO_Id { get => IPO_ID; set => IPO_ID = value; }
+    [Ignore]
+    public bool IsSelected { get; set; }
     public string FormNo { get; set; } = string.Empty;
     public string BankCode { get; set; } = string.Empty;
     public string Name { get; set; } = string.Empty;

@@ -105,13 +105,30 @@ public partial class LuckyNoViewModel : BaseViewModel
             foreach (var row in ws.RowsUsed().Skip(1))
             {
                 var category = row.Cell(2).GetValue<string>();
+                var searchType = row.Cell(3).GetValue<string>();
+                var sequenceId = row.Cell(4).TryGetValue(out int seq) ? seq : 0;
                 var luckyNo = row.Cell(6).GetValue<int>();
+
                 var existing = await _dbService.Connection.Table<LuckyNumberAllocation>()
-                    .Where(l => l.IPO_ID == IpoId && l.Category == category)
+                    .Where(l => l.IPO_ID == IpoId &&
+                                l.Category == category &&
+                                l.SearchType == searchType)
                     .FirstOrDefaultAsync();
+
+                if (existing == null)
+                {
+                    existing = await _dbService.Connection.Table<LuckyNumberAllocation>()
+                        .Where(l => l.IPO_ID == IpoId && l.Category == category)
+                        .FirstOrDefaultAsync();
+                }
+
                 if (existing != null)
                 {
                     existing.RandomSeedNumber = luckyNo;
+                    existing.LuckyNo = luckyNo;
+                    if (sequenceId > 0) existing.SequenceId = sequenceId;
+                    if (int.TryParse(searchType?.Replace("Type ", "", StringComparison.OrdinalIgnoreCase).Trim(), out var tid))
+                        existing.SearchTypeId = tid;
                     await _dbService.Connection.UpdateAsync(existing);
                 }
             }

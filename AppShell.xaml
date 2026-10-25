@@ -6,18 +6,105 @@
        Title="IPO Process Management System"
        FlyoutBehavior="Disabled">
 
-    <Shell.FlyoutHeader>
-        <Border BackgroundColor="#1B3A6B" Padding="16,24">
-            <VerticalStackLayout Spacing="4">
-                <Label Text="IPO PROCESS SYSTEM" TextColor="White" FontAttributes="Bold" FontSize="18" />
-                <Label Text="Registrar &amp; Transfer Agent (RTA)" TextColor="#B0BEC5" FontSize="12" />
-            </VerticalStackLayout>
-        </Border>
-    </Shell.FlyoutHeader>
 
-    <Shell.FlyoutFooter>
-        <views:FooterView />
-    </Shell.FlyoutFooter>
+    <!-- ============================================================
+         DESKTOP MENU BAR — visible at top of window on WinUI
+         ============================================================ -->
+    <Shell.MenuBarItems>
+        <!-- MENU -->
+        <MenuBarItem Text="MENU">
+            <MenuFlyoutSubItem Text="PRE IPO">
+                <MenuFlyoutItem Text="IPO Generate (Ctrl+I)" x:Name="MenuIpoGenerate" Clicked="OnMenuNavigate" CommandParameter="//ipogenerate">
+                    <MenuFlyoutItem.KeyboardAccelerators>
+                        <KeyboardAccelerator Modifiers="Ctrl" Key="I" />
+                    </MenuFlyoutItem.KeyboardAccelerators>
+                </MenuFlyoutItem>
+                <MenuFlyoutItem Text="Company Master (Alt+C)" x:Name="MenuCompanyMaster" Clicked="OnMenuNavigate" CommandParameter="//companymaster">
+                    <MenuFlyoutItem.KeyboardAccelerators>
+                        <KeyboardAccelerator Modifiers="Alt" Key="C" />
+                    </MenuFlyoutItem.KeyboardAccelerators>
+                </MenuFlyoutItem>
+            </MenuFlyoutSubItem>
+            <MenuFlyoutSeparator />
+            <MenuFlyoutSubItem Text="IPO">
+                <MenuFlyoutItem Text="NSE/BSE Bid Upload (Alt+S)" Clicked="OnMenuNavigate" CommandParameter="//bidupload">
+                    <MenuFlyoutItem.KeyboardAccelerators>
+                        <KeyboardAccelerator Modifiers="Alt" Key="S" />
+                    </MenuFlyoutItem.KeyboardAccelerators>
+                </MenuFlyoutItem>
+                <MenuFlyoutItem Text="Day Wise Process" Clicked="OnMenuNavigate" CommandParameter="//daywise" />
+                <MenuFlyoutItem Text="Closing Day (T)" Clicked="OnMenuNavigate" CommandParameter="//closingday" />
+                <MenuFlyoutItem Text="Closing Next Day (T+1)" Clicked="OnMenuNavigate" CommandParameter="//closingnextday" />
+                <MenuFlyoutItem Text="Bank Reconciliation (T+2)" Clicked="OnMenuNavigate" CommandParameter="//reconciliation" />
+                <MenuFlyoutItem Text="Technical Rejection (Ctrl+T)" Clicked="OnMenuNavigate" CommandParameter="//technicalrejection">
+                    <MenuFlyoutItem.KeyboardAccelerators>
+                        <KeyboardAccelerator Modifiers="Ctrl" Key="T" />
+                    </MenuFlyoutItem.KeyboardAccelerators>
+                </MenuFlyoutItem>
+                <MenuFlyoutItem Text="Basis of Allotment (Ctrl+B)" Clicked="OnMenuNavigate" CommandParameter="//basisallotment">
+                    <MenuFlyoutItem.KeyboardAccelerators>
+                        <KeyboardAccelerator Modifiers="Ctrl" Key="B" />
+                    </MenuFlyoutItem.KeyboardAccelerators>
+                </MenuFlyoutItem>
+                <MenuFlyoutItem Text="Lucky No (Ctrl+Shift+L)" Clicked="OnMenuNavigate" CommandParameter="//luckyno">
+                    <MenuFlyoutItem.KeyboardAccelerators>
+                        <KeyboardAccelerator Modifiers="Ctrl,Shift" Key="L" />
+                    </MenuFlyoutItem.KeyboardAccelerators>
+                </MenuFlyoutItem>
+                <MenuFlyoutItem Text="Allocation (Ctrl+Shift+A)" Clicked="OnMenuNavigate" CommandParameter="//allocation">
+                    <MenuFlyoutItem.KeyboardAccelerators>
+                        <KeyboardAccelerator Modifiers="Ctrl,Shift" Key="A" />
+                    </MenuFlyoutItem.KeyboardAccelerators>
+                </MenuFlyoutItem>
+            </MenuFlyoutSubItem>
+            <MenuFlyoutSeparator />
+            <MenuFlyoutSubItem Text="POST IPO">
+                <MenuFlyoutItem Text="Reports (Ctrl+Shift+R)" Clicked="OnMenuNavigate" CommandParameter="//reports">
+                    <MenuFlyoutItem.KeyboardAccelerators>
+                        <KeyboardAccelerator Modifiers="Ctrl,Shift" Key="R" />
+                    </MenuFlyoutItem.KeyboardAccelerators>
+                </MenuFlyoutItem>
+                <MenuFlyoutItem Text="Listing Report (Alt+L)" Clicked="OnMenuNavigate" CommandParameter="//listingreport">
+                    <MenuFlyoutItem.KeyboardAccelerators>
+                        <KeyboardAccelerator Modifiers="Alt" Key="L" />
+                    </MenuFlyoutItem.KeyboardAccelerators>
+                </MenuFlyoutItem>
+                <MenuFlyoutItem Text="Data Transfer (B-Tas/Online)" Clicked="OnMenuNavigate" CommandParameter="//datatransfer" />
+                <MenuFlyoutItem Text="FC Email Sender (Alt+F)" Clicked="OnMenuNavigate" CommandParameter="//fcemailsender">
+                    <MenuFlyoutItem.KeyboardAccelerators>
+                        <KeyboardAccelerator Modifiers="Alt" Key="F" />
+                    </MenuFlyoutItem.KeyboardAccelerators>
+                </MenuFlyoutItem>
+                <MenuFlyoutItem Text="Allotment Count (F1)" Clicked="OnMenuNavigate" CommandParameter="//allotmentcount">
+                    <MenuFlyoutItem.KeyboardAccelerators>
+                        <KeyboardAccelerator Key="F1" />
+                    </MenuFlyoutItem.KeyboardAccelerators>
+                </MenuFlyoutItem>
+                <MenuFlyoutItem Text="Applnsx Summary" Clicked="OnMenuNavigate" CommandParameter="//applnsxsummary" />
+                <MenuFlyoutItem Text="PHY Allotment Intimation" Clicked="OnMenuNavigate" CommandParameter="//phyallotmentintimation" />
+            </MenuFlyoutSubItem>
+            <MenuFlyoutSeparator />
+            <MenuFlyoutSubItem Text="SETTINGS">
+                <MenuFlyoutItem Text="Company Account Detail" Clicked="OnMenuNavigate" CommandParameter="//companyaccountdetail" />
+            </MenuFlyoutSubItem>
+        </MenuBarItem>
+
+        <!-- LOGOUT -->
+        <MenuBarItem Text="LOGOUT">
+            <MenuFlyoutItem Text="Logout" Clicked="OnLogoutClicked" />
+        </MenuBarItem>
+
+        <!-- EXIT -->
+        <MenuBarItem Text="EXIT">
+            <MenuFlyoutItem Text="Exit Application" Clicked="OnExitClicked" />
+        </MenuBarItem>
+
+        <!-- HELP -->
+        <MenuBarItem Text="HELP">
+            <MenuFlyoutItem Text="About IPO Process System" Clicked="OnHelpClicked" />
+            <MenuFlyoutItem Text="Process Workflow Guide" Clicked="OnWorkflowGuideClicked" />
+        </MenuBarItem>
+    </Shell.MenuBarItems>
 
     <!-- Login page shown first; flyout is disabled until user logs in -->
     <ShellContent Title="Login"
@@ -43,6 +130,9 @@
         <ShellContent Title="Day Wise Process"
                       ContentTemplate="{DataTemplate views:DayWisePage}"
                       Route="daywise" />
+        <ShellContent Title="Closing Day (T)"
+                      ContentTemplate="{DataTemplate views:ClosingDayPage}"
+                      Route="closingday" />
         <ShellContent Title="Closing Next Day (T+1)"
                       ContentTemplate="{DataTemplate views:ClosingNextDayPage}"
                       Route="closingnextday" />
@@ -71,10 +161,10 @@
         <ShellContent Title="Listing Report (Alt+L)"
                       ContentTemplate="{DataTemplate views:ListingReportPage}"
                       Route="listingreport" />
-        <ShellContent Title="Data Transfer (BTAS / Online)"
+        <ShellContent Title="Data Transfer (B-Tas / Online)"
                       ContentTemplate="{DataTemplate views:DataTransferPage}"
                       Route="datatransfer" />
-        <ShellContent Title="FC Email Sender"
+        <ShellContent Title="FC Email Sender (Alt+F)"
                       ContentTemplate="{DataTemplate views:FcEmailSenderPage}"
                       Route="fcemailsender" />
         <ShellContent Title="Allotment Count (F1)"
@@ -83,6 +173,9 @@
         <ShellContent Title="Applnsx Summary"
                       ContentTemplate="{DataTemplate views:ApplnsxSummaryPage}"
                       Route="applnsxsummary" />
+        <ShellContent Title="PHY Allotment Intimation"
+                      ContentTemplate="{DataTemplate views:PhyAllotmentIntimationPage}"
+                      Route="phyallotmentintimation" />
     </FlyoutItem>
 
     <!-- 4. SETTINGS Section -->

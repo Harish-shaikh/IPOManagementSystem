@@ -1,4 +1,4 @@
-﻿using IPOProcessingSystem.Models;
+using IPOProcessingSystem.Models;
 
 namespace IPOProcessingSystem.Services.Interfaces;
 
@@ -18,4 +18,11 @@ public interface IBasisCalculationService
 
     /// <summary>Applies imported lucky-draw sequence numbers, flips AllocatedFlag, and finalizes ALLOT vs DBAL.</summary>
     Task<int> ApplyLuckyDrawResultsAsync(int ipoId, List<(string category, int luckyNo)> results);
+
+    /// <summary>Exports Basis of Allotment in BSE Excel format.</summary>
+    Task<string> ExportBseFormatAsync(int ipoId);
+
+    /// <summary>Exports Basis of Allotment in NSE NETBAS pipe-delimited format.</summary>
+    Task<string> ExportNetBasNseAsync(int ipoId);
 }
+

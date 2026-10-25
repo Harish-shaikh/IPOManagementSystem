@@ -2,6 +2,7 @@
 <Application xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:helpers="clr-namespace:IPOProcessingSystem.Helpers"
+             xmlns:views="clr-namespace:IPOProcessingSystem.Views"
              x:Class="IPOProcessingSystem.App">
     <Application.Resources>
         <ResourceDictionary>
@@ -9,8 +10,31 @@
                 <ResourceDictionary Source="Resources/Styles/Colors.xaml" />
                 <ResourceDictionary Source="Resources/Styles/Styles.xaml" />
             </ResourceDictionary.MergedDictionaries>
-            <helpers:StringEqualsConverter x:Key="StringEqualsConverter" />
-            <helpers:InvertedBoolConverter x:Key="InvertedBoolConverter" />
+
+            <!-- ── Value Converters (global) ── -->
+            <helpers:StringEqualsConverter     x:Key="StringEqualsConverter" />
+            <helpers:InvertedBoolConverter     x:Key="InvertedBoolConverter" />
+            <helpers:StringNotEmptyConverter   x:Key="StringNotEmptyConverter" />
+            <helpers:TabColorConverter         x:Key="TabColorConverter" />
+
+            <!-- ── Persistent Footer ControlTemplate ──
+                 Applied to every ContentPage via the Style below.
+                 ContentPresenter renders the page's own Content in Row 0 (*),
+                 FooterView sits in Row 1 (Auto), always visible at the bottom. -->
+            <ControlTemplate x:Key="PageWithFooterTemplate">
+                <Grid RowDefinitions="*, Auto">
+                    <ContentPresenter Grid.Row="0" />
+                    <views:FooterView Grid.Row="1" />
+                </Grid>
+            </ControlTemplate>
+
+            <!-- Apply footer template to ALL ContentPages automatically
+                 (ApplyToDerivedTypes covers every page class in the app) -->
+            <Style TargetType="ContentPage" ApplyToDerivedTypes="True">
+                <Setter Property="ControlTemplate"
+                        Value="{StaticResource PageWithFooterTemplate}" />
+            </Style>
+
         </ResourceDictionary>
     </Application.Resources>
 </Application>

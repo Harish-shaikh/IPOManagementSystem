@@ -79,6 +79,30 @@ public class AllocationService : IAllocationService
         return results;
     }
 
+    public async Task<List<Allocation>> RunRefundProcessAsync(int ipoId)
+    {
+        var bids = await _dbService.Connection.Table<ApplnsxBid>()
+            .Where(b => b.IPO_ID == ipoId).ToListAsync();
+
+        var allocations = await _dbService.Connection.Table<Allocation>()
+            .Where(a => a.IPO_ID == ipoId).ToListAsync();
+
+        foreach (var alloc in allocations)
+        {
+            var catBids = bids.Where(b =>
+                string.Equals(b.Category, alloc.Category, StringComparison.OrdinalIgnoreCase)).ToList();
+
+            decimal allottedAmount = catBids
+                .Where(b => b.Status == "ALLOTTED")
+                .Sum(b => b.Amount);
+            decimal totalAmount = catBids.Sum(b => b.Amount);
+
+            alloc.DBal = Math.Round(totalAmount - allottedAmount, 2);
+            await _dbService.Connection.UpdateAsync(alloc);
+        }
+        return allocations;
+    }
+
     public async Task<List<Allocation>> GetAllocationsAsync(int ipoId)
         => await _dbService.Connection.Table<Allocation>()
                .Where(a => a.IPO_ID == ipoId).ToListAsync();

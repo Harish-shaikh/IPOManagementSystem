@@ -102,6 +102,24 @@ public partial class FcEmailSenderViewModel : BaseViewModel
     }
 
     [RelayCommand]
+    private async Task AbaResolutionAsync()
+    {
+        if (!await _alertService.ConfirmAsync("ABA Resolution", "Mark ABA resolution as complete for all banks?")) return;
+        IsBusy = true;
+        try
+        {
+            foreach (var status in BankStatuses)
+            {
+                status.AbaResolutionDone = true;
+                await _dbService.Connection.UpdateAsync(status);
+            }
+            await _alertService.ShowSuccessAsync("ABA Resolution marked complete for all banks.");
+            StatusMessage = "ABA Resolution done.";
+        }
+        finally { IsBusy = false; }
+    }
+
+    [RelayCommand]
     private async Task EmailToBanksAsync()
     {
         if (!DatesAreEqual)

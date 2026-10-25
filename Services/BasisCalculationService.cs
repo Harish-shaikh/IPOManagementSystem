@@ -1,4 +1,5 @@
-﻿using IPOProcessingSystem.Data;
+using ClosedXML.Excel;
+using IPOProcessingSystem.Data;
 using IPOProcessingSystem.Models;
 using IPOProcessingSystem.Services.Interfaces;
 
@@ -96,6 +97,18 @@ public class BasisCalculationService : IBasisCalculationService
 
     public async Task<bool> ApproveBasisAsync(int ipoId)
     {
+        var rows = await _dbService.Connection.Table<BasisOfAllotment>()
+            .Where(b => b.IPO_ID == ipoId).ToListAsync();
+
+        await _dbService.Connection.RunInTransactionAsync(tran =>
+        {
+            foreach (var r in rows)
+            {
+                r.IsExchangeApproved = true;
+                tran.Update(r);
+            }
+        });
+
         var listing = await _dbService.Connection.Table<ListingData>()
             .Where(l => l.IPO_ID == ipoId).FirstOrDefaultAsync();
         if (listing == null)
@@ -103,9 +116,89 @@ public class BasisCalculationService : IBasisCalculationService
             listing = new ListingData { IPO_ID = ipoId };
             await _dbService.Connection.InsertAsync(listing);
         }
+
+        await ExportBseFormatAsync(ipoId);
+        await ExportNetBasNseAsync(ipoId);
+
         return true;
-        // TODO: export to BSE/NSE format files here (ClosedXML) per
-        // manual's "EXPORT FOR BSE" / "EXPORT NETBAS NSE" buttons.
+    }
+
+    public async Task<string> ExportBseFormatAsync(int ipoId)
+    {
+        var rows = await _dbService.Connection.Table<BasisOfAllotment>()
+            .Where(b => b.IPO_ID == ipoId).ToListAsync();
+
+        var company = await _dbService.Connection.Table<CompanyMaster>()
+            .Where(c => c.IPO_ID == ipoId).FirstOrDefaultAsync();
+        string clientName = !string.IsNullOrWhiteSpace(company?.IssuerName) ? company.IssuerName : $"IPO_{ipoId}";
+
+        var exportPath = Path.Combine(@"\\192.168.0.253\IDRIVE\ISSUE\EDP", clientName, "Basis");
+        if (!Directory.Exists(@"\\192.168.0.253"))
+            exportPath = Path.Combine(FileSystem.AppDataDirectory, "Exports", $"IPO_{ipoId}", "Basis");
+        Directory.CreateDirectory(exportPath);
+
+        var fileName = Path.Combine(exportPath, $"{clientName}_BASIS_BSE.xlsx");
+        using var wb = new ClosedXML.Excel.XLWorkbook();
+        var ws = wb.Worksheets.Add("Basis");
+
+        var headers = new[] { "Category","Serial","CAT","APPLNS","SHRAPLD","PROPALLOC",
+                               "PROPER","MLOT","NOALTD","SHRALTD","NUMERATOR","DENOMIN",
+                               "EXCESS","SR","RDD","APPERCE","SHRPERCE" };
+        for (int i = 0; i < headers.Length; i++)
+            ws.Cell(1, i + 1).Value = headers[i];
+
+        int r = 2;
+        foreach (var row in rows)
+        {
+            ws.Cell(r, 1).Value = row.Category;
+            ws.Cell(r, 2).Value = row.Serial;
+            ws.Cell(r, 3).Value = row.ShrApld;
+            ws.Cell(r, 4).Value = row.Applns;
+            ws.Cell(r, 5).Value = row.ShrApld;
+            ws.Cell(r, 6).Value = row.PropAlloc;
+            ws.Cell(r, 7).Value = row.Proper;
+            ws.Cell(r, 8).Value = row.MLot;
+            ws.Cell(r, 9).Value = row.NoAlto;
+            ws.Cell(r, 10).Value = row.ShrAlto;
+            ws.Cell(r, 11).Value = row.Numerator;
+            ws.Cell(r, 12).Value = row.Denomin;
+            ws.Cell(r, 13).Value = row.Excess;
+            ws.Cell(r, 14).Value = row.SR;
+            ws.Cell(r, 15).Value = row.RDD;
+            ws.Cell(r, 16).Value = row.AppPercent;
+            ws.Cell(r, 17).Value = row.ShrPercent;
+            r++;
+        }
+        wb.SaveAs(fileName);
+        return fileName;
+    }
+
+    public async Task<string> ExportNetBasNseAsync(int ipoId)
+    {
+        var rows = await _dbService.Connection.Table<BasisOfAllotment>()
+            .Where(b => b.IPO_ID == ipoId).ToListAsync();
+
+        var company = await _dbService.Connection.Table<CompanyMaster>()
+            .Where(c => c.IPO_ID == ipoId).FirstOrDefaultAsync();
+        string clientName = !string.IsNullOrWhiteSpace(company?.IssuerName) ? company.IssuerName : $"IPO_{ipoId}";
+
+        var exportPath = Path.Combine(@"\\192.168.0.253\IDRIVE\ISSUE\EDP", clientName, "Basis");
+        if (!Directory.Exists(@"\\192.168.0.253"))
+            exportPath = Path.Combine(FileSystem.AppDataDirectory, "Exports", $"IPO_{ipoId}", "Basis");
+        Directory.CreateDirectory(exportPath);
+
+        var fileName = Path.Combine(exportPath, $"{clientName}_NETBAS_NSE.txt");
+        var lines = new List<string> { "CATEGORY|APPLNS|SHRAPLD|ALLOTTED|RATIO|MLOT" };
+        foreach (var g in rows.GroupBy(r => r.Category))
+        {
+            decimal totalApld = g.Sum(r => r.ShrApld);
+            decimal totalAlto = g.Sum(r => r.ShrAlto);
+            decimal ratio = totalApld > 0 ? totalAlto / totalApld : 0;
+            int mlot = g.FirstOrDefault()?.MLot ?? 1;
+            lines.Add($"{g.Key}|{g.Sum(r => r.Applns)}|{totalApld}|{totalAlto}|{ratio:F6}|{mlot}");
+        }
+        await File.WriteAllLinesAsync(fileName, lines);
+        return fileName;
     }
 
     public async Task<List<LuckyNumberAllocation>> GenerateLuckyDrawRangesAsync(int ipoId)
@@ -137,20 +230,59 @@ public class BasisCalculationService : IBasisCalculationService
 
     public async Task<int> ApplyLuckyDrawResultsAsync(int ipoId, List<(string category, int luckyNo)> results)
     {
-        // TODO: cross-reference lucky numbers against serials assigned during
-        // GenerateLuckyDrawRangesAsync and flip ALLOT vs DBAL on the matching
-        // ApplnsxBid rows. Left as an extension point since the exact serial
-        // <-> application mapping depends on your lot-wise serial numbering.
         int updated = 0;
         foreach (var (category, luckyNo) in results)
         {
+            // Get all bids for this category, ordered by entry order
+            var catBids = await _dbService.Connection.Table<ApplnsxBid>()
+                .Where(b => b.IPO_ID == ipoId &&
+                            b.Category == category &&
+                            b.Status != "REJECTED")
+                .ToListAsync();
+
+            if (catBids.Count == 0) continue;
+
+            // Get basis rows to know how many get allotted
+            var basisRows = await _dbService.Connection.Table<BasisOfAllotment>()
+                .Where(b => b.IPO_ID == ipoId && b.Category == category)
+                .ToListAsync();
+            int noAllotted = basisRows.Sum(r => r.NoAlto);
+
+            // Lucky number = starting serial for allotment; wrap around if needed
+            var ordered = catBids.Select((bid, idx) => (bid, serial: idx + 1)).ToList();
+            var allottedSerials = new HashSet<int>();
+            for (int i = 0; i < noAllotted && i < ordered.Count; i++)
+            {
+                int serial = ((luckyNo - 1 + i) % ordered.Count) + 1;
+                allottedSerials.Add(serial);
+            }
+
+            await _dbService.Connection.RunInTransactionAsync(tran =>
+            {
+                foreach (var (bid, serial) in ordered)
+                {
+                    if (allottedSerials.Contains(serial))
+                    {
+                        bid.Status = "ALLOTTED";
+                        bid.AllottedQuantity = bid.Quantity;
+                    }
+                    else
+                    {
+                        bid.Status = "REFUND";
+                        bid.AllottedQuantity = 0;
+                    }
+                    tran.Update(bid);
+                    updated++;
+                }
+            });
+
+            // Update the LuckyNumberAllocation record
             var lucky = await _dbService.Connection.Table<LuckyNumberAllocation>()
                 .Where(l => l.IPO_ID == ipoId && l.Category == category).FirstOrDefaultAsync();
             if (lucky != null)
             {
                 lucky.AllocatedFlag = true;
                 await _dbService.Connection.UpdateAsync(lucky);
-                updated++;
             }
         }
         return updated;

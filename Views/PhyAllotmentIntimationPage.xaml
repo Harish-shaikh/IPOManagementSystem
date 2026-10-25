@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:IPOProcessingSystem.ViewModels"
+             x:Class="IPOProcessingSystem.Views.PhyAllotmentIntimationPage"
+             x:DataType="vm:PhyAllotmentIntimationViewModel"
+             Title="{Binding Title}">
+    <ScrollView>
+        <VerticalStackLayout Padding="20" Spacing="14">
+            <Label Text="PHY Allotment Intimation Letter" Style="{StaticResource SectionHeader}" />
+            <Label Text="This report must be filled manually. It is NOT part of the All-In-One report generation."
+                   TextColor="DarkOrange" FontAttributes="Italic" FontSize="12" />
+
+            <!-- Exchange Type -->
+            <HorizontalStackLayout Spacing="16">
+                <Label Text="Exchange:" VerticalOptions="Center" FontAttributes="Bold" WidthRequest="130" />
+                <Picker ItemsSource="{Binding ExchangeTypes}" SelectedItem="{Binding ExchangeType}" WidthRequest="140" />
+            </HorizontalStackLayout>
+
+            <!-- Address -->
+            <VerticalStackLayout Spacing="4">
+                <Label Text="Address:" FontAttributes="Bold" />
+                <Editor Text="{Binding Address}" Placeholder="Enter company / RTA address..."
+                        HeightRequest="80" />
+            </VerticalStackLayout>
+
+            <!-- Tel / Fax in one row -->
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                <VerticalStackLayout Grid.Column="0" Spacing="4">
+                    <Label Text="Tel:" FontAttributes="Bold" />
+                    <Entry Text="{Binding Tel}" Placeholder="+91 22 XXXX XXXX" />
+                </VerticalStackLayout>
+                <VerticalStackLayout Grid.Column="1" Spacing="4">
+                    <Label Text="Fax:" FontAttributes="Bold" />
+                    <Entry Text="{Binding Fax}" Placeholder="+91 22 XXXX XXXX" />
+                </VerticalStackLayout>
+            </Grid>
+
+            <!-- Website / Email in one row -->
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                <VerticalStackLayout Grid.Column="0" Spacing="4">
+                    <Label Text="Website:" FontAttributes="Bold" />
+                    <Entry Text="{Binding Website}" Placeholder="https://www.company.com" />
+                </VerticalStackLayout>
+                <VerticalStackLayout Grid.Column="1" Spacing="4">
+                    <Label Text="Email-ID:" FontAttributes="Bold" />
+                    <Entry Text="{Binding EmailId}" Placeholder="info@company.com" Keyboard="Email" />
+                </VerticalStackLayout>
+            </Grid>
+
+            <!-- IPO Details (free text) -->
+            <VerticalStackLayout Spacing="4">
+                <Label Text="IPO Details:" FontAttributes="Bold" />
+                <Label Text="(Include: issue price, face value, share premium, reservation portions, etc.)"
+                       FontSize="11" TextColor="#666666" />
+                <Editor Text="{Binding IpoDetails}"
+                        Placeholder="e.g. Issue Price: ₹XX.00 per share, Face Value: ₹10.00, Premium: ₹XX.00, Reservation: Retail 35% | HNI 15% | QIB 50%"
+                        HeightRequest="100" />
+            </VerticalStackLayout>
+
+            <!-- Issue Price / Mode Remittance in one row -->
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                <VerticalStackLayout Grid.Column="0" Spacing="4">
+                    <Label Text="Issue Price (₹):" FontAttributes="Bold" />
+                    <Entry Text="{Binding IssuePrice}" Placeholder="e.g. 280.00" Keyboard="Numeric" />
+                </VerticalStackLayout>
+                <VerticalStackLayout Grid.Column="1" Spacing="4">
+                    <Label Text="Mode of Remittance:" FontAttributes="Bold" />
+                    <Entry Text="{Binding ModeRemittance}" Placeholder="ASBA UNBLOCK" />
+                </VerticalStackLayout>
+            </Grid>
+
+            <!-- Contact Person / Designation -->
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                <VerticalStackLayout Grid.Column="0" Spacing="4">
+                    <Label Text="Contact Person:" FontAttributes="Bold" />
+                    <Entry Text="{Binding ContactPerson}" Placeholder="Name of authorised signatory" />
+                </VerticalStackLayout>
+                <VerticalStackLayout Grid.Column="1" Spacing="4">
+                    <Label Text="Designation:" FontAttributes="Bold" />
+                    <Entry Text="{Binding Designation}" Placeholder="e.g. Company Secretary" />
+                </VerticalStackLayout>
+            </Grid>
+
+            <!-- Status / Activity -->
+            <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" />
+            <Label Text="{Binding StatusMessage}" TextColor="{StaticResource Accent}"
+                   FontAttributes="Bold" IsVisible="{Binding StatusMessage, Converter={StaticResource StringNotEmptyConverter}}" />
+
+            <!-- Output Path Info -->
+            <Border Stroke="#CCCCCC" StrokeThickness="1" Padding="10" BackgroundColor="#F9F9F9">
+                <VerticalStackLayout Spacing="4">
+                    <Label Text="Output will be saved to:" FontAttributes="Bold" FontSize="11" />
+                    <Label Text="\\192.168.0.253\idrive\issue\EDP\{ClientName}\AllotmentIntimation\{ClientName}_AllotmentIntimation.txt"
+                           TextColor="#555555" FontSize="11" />
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- Action Buttons -->
+            <HorizontalStackLayout Spacing="12" HorizontalOptions="End">
+                <Button Text="CLOSE"
+                        Command="{Binding CloseCommand}"
+                        BackgroundColor="#607D8B"
+                        TextColor="White"
+                        WidthRequest="100" />
+                <Button Text="OK — GENERATE LETTER"
+                        Command="{Binding GenerateLetterCommand}"
+                        BackgroundColor="{StaticResource Primary}"
+                        TextColor="White"
+                        WidthRequest="200" />
+            </HorizontalStackLayout>
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

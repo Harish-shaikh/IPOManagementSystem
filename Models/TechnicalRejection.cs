@@ -1,4 +1,4 @@
-﻿using SQLite;
+using SQLite;
 
 namespace IPOProcessingSystem.Models;
 
@@ -26,3 +26,13 @@ public class RejectionChecklistItem
     public string ReasonText { get; set; } = string.Empty;
     public bool Include { get; set; } = true;
 }
+
+public class SebiDebarredPan
+{
+    [PrimaryKey, AutoIncrement]
+    public int Id { get; set; }
+    public string PAN { get; set; } = string.Empty;
+    public string Name { get; set; } = string.Empty;
+    public DateTime ImportedOn { get; set; } = DateTime.Now;
+}
+

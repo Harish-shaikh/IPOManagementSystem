@@ -33,8 +33,9 @@
             <HorizontalStackLayout Spacing="10">
                 <Button Text="Load Banks" Command="{Binding LoadCommand}" />
                 <Button Text="1. GENERATE REPORTS" Command="{Binding GenerateReportsCommand}" BackgroundColor="{StaticResource Primary}" />
-                <Button Text="2. ZIP BANK-WISE" Command="{Binding ZipBankWiseCommand}" />
-                <Button Text="3. EMAIL TO BANKS" Command="{Binding EmailToBanksCommand}" BackgroundColor="ForestGreen" />
+                <Button Text="2. ABA RESOLUTION" Command="{Binding AbaResolutionCommand}" BackgroundColor="DarkOrange" />
+                <Button Text="3. ZIP BANK-WISE" Command="{Binding ZipBankWiseCommand}" />
+                <Button Text="4. EMAIL TO BANKS" Command="{Binding EmailToBanksCommand}" BackgroundColor="ForestGreen" />
             </HorizontalStackLayout>
 
             <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" />
@@ -44,22 +45,24 @@
         <!-- Status Collection -->
         <CollectionView Grid.Row="1" ItemsSource="{Binding BankStatuses}">
             <CollectionView.Header>
-                <Grid ColumnDefinitions="*,100,100,100,100" Padding="6" BackgroundColor="{StaticResource Primary}">
+                <Grid ColumnDefinitions="*,90,90,90,90,90" Padding="6" BackgroundColor="{StaticResource Primary}">
                     <Label Text="Bank Name" TextColor="White" FontAttributes="Bold" />
                     <Label Grid.Column="1" Text="Code" TextColor="White" FontAttributes="Bold" />
                     <Label Grid.Column="2" Text="Letters Gen?" TextColor="White" FontAttributes="Bold" />
-                    <Label Grid.Column="3" Text="ZIP Done?" TextColor="White" FontAttributes="Bold" />
-                    <Label Grid.Column="4" Text="Email Sent?" TextColor="White" FontAttributes="Bold" />
+                    <Label Grid.Column="3" Text="ABA Done?" TextColor="White" FontAttributes="Bold" />
+                    <Label Grid.Column="4" Text="ZIP Done?" TextColor="White" FontAttributes="Bold" />
+                    <Label Grid.Column="5" Text="Email Sent?" TextColor="White" FontAttributes="Bold" />
                 </Grid>
             </CollectionView.Header>
             <CollectionView.ItemTemplate>
                 <DataTemplate x:DataType="models:FcEmailStatus">
-                    <Grid ColumnDefinitions="*,100,100,100,100" Padding="6">
+                    <Grid ColumnDefinitions="*,90,90,90,90,90" Padding="6">
                         <Label Text="{Binding BankName}" />
                         <Label Grid.Column="1" Text="{Binding BankCode}" />
                         <Label Grid.Column="2" Text="{Binding FundTransferDone}" />
-                        <Label Grid.Column="3" Text="{Binding ZipDone}" />
-                        <Label Grid.Column="4" Text="{Binding SendDone}" />
+                        <Label Grid.Column="3" Text="{Binding AbaResolutionDone}" />
+                        <Label Grid.Column="4" Text="{Binding ZipDone}" />
+                        <Label Grid.Column="5" Text="{Binding SendDone}" />
                     </Grid>
                 </DataTemplate>
             </CollectionView.ItemTemplate>

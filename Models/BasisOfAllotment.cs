@@ -1,4 +1,4 @@
-﻿using SQLite;
+using SQLite;
 
 namespace IPOProcessingSystem.Models;
 
@@ -21,6 +21,11 @@ public class BasisOfAllotment
     public decimal Excess { get; set; }
     public decimal AppPercent { get; set; }  // APPERCE
     public decimal ShrPercent { get; set; }  // SHRPERCE
+    public int SR { get; set; }              // Serial rank for proportionate lottery
+    public int RDD { get; set; }             // Remaining demand difference
+    public decimal NAltPer { get; set; }     // No. Allotted Percent (NALLTPER)
+    public decimal SAltPer { get; set; }     // Shares Allotted Percent (SALLTPER)
+    public bool IsExchangeApproved { get; set; } // Locks basis from further edits once approved
 }
 
 // Per-category lot-size parameters (IPO_TMAST in manual)
@@ -35,4 +40,5 @@ public class BasisCategoryParameter
     public decimal PSize1 { get; set; }  // working copy, adjustable
     public decimal OverSubscription { get; set; }
     public int Lot { get; set; }         // min lot for this category
+    public string LName { get; set; } = string.Empty;
 }

@@ -59,6 +59,7 @@ public class DatabaseService
             syncDb.CreateTable<ClientMaster>();
             syncDb.CreateTable<BidUploadLog>();
             syncDb.CreateTable<FcEmailStatus>();
+            syncDb.CreateTable<SebiDebarredPan>();
 
             SeedDefaultUser(syncDb);
             SeedDefaultRejectionChecklist(syncDb);

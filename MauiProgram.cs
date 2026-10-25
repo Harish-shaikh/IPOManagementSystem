@@ -44,6 +44,8 @@ public static class MauiProgram
         builder.Services.AddSingleton<IReportService, ReportService>();
         builder.Services.AddSingleton<IBendemService, BendemService>();
         builder.Services.AddSingleton<IAllocationService, AllocationService>();
+        builder.Services.AddSingleton<IEmailService, EmailService>();
+        builder.Services.AddSingleton<INetworkPathService, NetworkPathService>();
 
         // -------- ViewModels --------
         builder.Services.AddTransient<LoginViewModel>();
@@ -52,6 +54,7 @@ public static class MauiProgram
         builder.Services.AddTransient<BidUploadViewModel>();
         builder.Services.AddTransient<DayWiseViewModel>();
         builder.Services.AddTransient<ClosingNextDayViewModel>();
+        builder.Services.AddTransient<ClosingDayViewModel>();
         builder.Services.AddTransient<ReconciliationViewModel>();
         builder.Services.AddTransient<TechnicalRejectionViewModel>();
         builder.Services.AddTransient<BasisAllotmentViewModel>();
@@ -64,6 +67,7 @@ public static class MauiProgram
         builder.Services.AddTransient<FcEmailSenderViewModel>();
         builder.Services.AddTransient<AllotmentCountViewModel>();
         builder.Services.AddTransient<ApplnsxSummaryViewModel>();
+        builder.Services.AddTransient<PhyAllotmentIntimationViewModel>();
 
         // -------- Views --------
         builder.Services.AddTransient<LoginPage>();
@@ -72,6 +76,7 @@ public static class MauiProgram
         builder.Services.AddTransient<BidUploadPage>();
         builder.Services.AddTransient<DayWisePage>();
         builder.Services.AddTransient<ClosingNextDayPage>();
+        builder.Services.AddTransient<ClosingDayPage>();
         builder.Services.AddTransient<ReconciliationPage>();
         builder.Services.AddTransient<TechnicalRejectionPage>();
         builder.Services.AddTransient<BasisAllotmentPage>();
@@ -84,6 +89,7 @@ public static class MauiProgram
         builder.Services.AddTransient<FcEmailSenderPage>();
         builder.Services.AddTransient<AllotmentCountPage>();
         builder.Services.AddTransient<ApplnsxSummaryPage>();
+        builder.Services.AddTransient<PhyAllotmentIntimationPage>();
         builder.Services.AddTransient<FooterView>();
 
         return builder.Build();

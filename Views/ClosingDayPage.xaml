@@ -1,0 +1,262 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:IPOProcessingSystem.ViewModels"
+             xmlns:models="clr-namespace:IPOProcessingSystem.Models"
+             x:Class="IPOProcessingSystem.Views.ClosingDayPage"
+             x:DataType="vm:ClosingDayViewModel"
+             Title="{Binding Title}">
+    <ScrollView>
+        <VerticalStackLayout Padding="16" Spacing="10">
+            <Label Text="Closing Day Process (T)" Style="{StaticResource SectionHeader}" />
+
+            <!-- ═══════════════════════════════════════════════════════════
+                 SECTION 1: BID FILE UPLOAD (Bank ASBA + Member ASBA)
+                 ═══════════════════════════════════════════════════════════ -->
+            <Border Stroke="{StaticResource Primary}" StrokeThickness="1" Padding="12" BackgroundColor="#FDFDFD">
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="Step 1 — Bid File Upload" FontAttributes="Bold" FontSize="13" />
+
+                    <!-- Exchange -->
+                    <HorizontalStackLayout Spacing="16">
+                        <Label Text="Stock Exchange" VerticalOptions="Center" />
+                        <RadioButton Content="NSE" GroupName="CDExch"
+                                     IsChecked="{Binding Exchange, Converter={StaticResource StringEqualsConverter}, ConverterParameter=NSE}" />
+                        <RadioButton Content="BSE" GroupName="CDExch"
+                                     IsChecked="{Binding Exchange, Converter={StaticResource StringEqualsConverter}, ConverterParameter=BSE}" />
+                    </HorizontalStackLayout>
+
+                    <!-- ASBA Type -->
+                    <HorizontalStackLayout Spacing="16">
+                        <Label Text="ASBA Type" VerticalOptions="Center" />
+                        <RadioButton Content="Bank ASBA" GroupName="CDAsba"
+                                     IsChecked="{Binding AsbaType, Converter={StaticResource StringEqualsConverter}, ConverterParameter='BANK ASBA'}" />
+                        <RadioButton Content="Member ASBA" GroupName="CDAsba"
+                                     IsChecked="{Binding AsbaType, Converter={StaticResource StringEqualsConverter}, ConverterParameter='MEMBER ASBA'}" />
+                    </HorizontalStackLayout>
+
+                    <!-- File picker -->
+                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                        <Entry Grid.Column="0" Text="{Binding FilePath}"
+                               Placeholder="Bid file path (.dat for BSE / .csv for NSE)" IsReadOnly="True" />
+                        <Button Grid.Column="1" Text="Browse" Command="{Binding BrowseCommand}" />
+                    </Grid>
+
+                    <!-- Upload action buttons -->
+                    <FlexLayout Direction="Row" Wrap="Wrap" AlignItems="Center">
+                        <Button Text="UPLOAD" Command="{Binding UploadCommand}"
+                                BackgroundColor="{StaticResource Primary}" TextColor="White" Margin="4" />
+                        <Button Text="CLEAR DATA" Command="{Binding ClearDataCommand}"
+                                BackgroundColor="{StaticResource Accent}" TextColor="White" Margin="4" />
+                        <Button Text="PROCESS" Command="{Binding ProcessCommand}"
+                                BackgroundColor="#388E3C" TextColor="White" Margin="4" />
+                        <Button Text="MAP IFSC" Command="{Binding MapIfscCommand}"
+                                BackgroundColor="#1565C0" TextColor="White" Margin="4" />
+                        <Button Text="BANK SUMMARY" Command="{Binding ToggleBankSummaryCommand}"
+                                BackgroundColor="#E65100" TextColor="White" Margin="4" />
+                    </FlexLayout>
+
+                    <!-- Totals -->
+                    <HorizontalStackLayout Spacing="24">
+                        <Label Text="{Binding TotalRecords, StringFormat='Total Records: {0:N0}'}" FontAttributes="Bold" />
+                        <Label Text="{Binding TotalQuantity, StringFormat='Total Quantity: {0:N0}'}" FontAttributes="Bold" />
+                    </HorizontalStackLayout>
+
+                    <!-- Bank Summary Panel -->
+                    <Border IsVisible="{Binding ShowBankSummary}" Stroke="#E65100" StrokeThickness="1" Padding="12" BackgroundColor="#FFF8E1" Margin="0,4">
+                        <VerticalStackLayout Spacing="8">
+                            <Grid ColumnDefinitions="*,Auto,Auto,Auto" ColumnSpacing="8">
+                                <Label Text="Bank Summary — Grouped by Bank Code" FontAttributes="Bold" FontSize="13" VerticalOptions="Center" />
+                                <RadioButton Grid.Column="1" Content="Bank ASBA" GroupName="CDBankSumGroup"
+                                             IsChecked="{Binding BankSummaryType, Converter={StaticResource StringEqualsConverter}, ConverterParameter='BANK ASBA'}" />
+                                <RadioButton Grid.Column="2" Content="Member ASBA" GroupName="CDBankSumGroup"
+                                             IsChecked="{Binding BankSummaryType, Converter={StaticResource StringEqualsConverter}, ConverterParameter='MEMBER ASBA'}" />
+                                <Button Grid.Column="3" Text="Refresh" Command="{Binding ShowBankSummaryCommand}" />
+                            </Grid>
+                            <CollectionView ItemsSource="{Binding BankSummaryList}" HeightRequest="140">
+                                <CollectionView.Header>
+                                    <Grid ColumnDefinitions="120,100,120,*" Padding="4" BackgroundColor="{StaticResource Primary}">
+                                        <Label Text="Bank Code" TextColor="White" FontAttributes="Bold" />
+                                        <Label Grid.Column="1" Text="Records" TextColor="White" FontAttributes="Bold" />
+                                        <Label Grid.Column="2" Text="Total Qty" TextColor="White" FontAttributes="Bold" />
+                                        <Label Grid.Column="3" Text="Total Amount" TextColor="White" FontAttributes="Bold" />
+                                    </Grid>
+                                </CollectionView.Header>
+                                <CollectionView.ItemTemplate>
+                                    <DataTemplate x:DataType="models:BankSummaryRow">
+                                        <Grid ColumnDefinitions="120,100,120,*" Padding="4">
+                                            <Label Text="{Binding BankCode}" FontAttributes="Bold" />
+                                            <Label Grid.Column="1" Text="{Binding Count, StringFormat='{0:N0}'}" />
+                                            <Label Grid.Column="2" Text="{Binding TotalQuantity, StringFormat='{0:N0}'}" />
+                                            <Label Grid.Column="3" Text="{Binding TotalAmount, StringFormat='₹{0:N2}'}" />
+                                        </Grid>
+                                    </DataTemplate>
+                                </CollectionView.ItemTemplate>
+                            </CollectionView>
+                        </VerticalStackLayout>
+                    </Border>
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- ═══════════════════════════════════════════════════════════
+                 SECTION 2: BENDEM GENERATION & VERIFICATION
+                 ═══════════════════════════════════════════════════════════ -->
+            <Border Stroke="#5C6BC0" StrokeThickness="1" Padding="12" BackgroundColor="#FDFDFD">
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="Step 2 — Bendem (Generate / Verify / Merge)" FontAttributes="Bold" FontSize="13" />
+
+                    <!-- Depository radio -->
+                    <HorizontalStackLayout Spacing="16">
+                        <Label Text="Depository:" VerticalOptions="Center" />
+                        <RadioButton Content="CDSL" GroupName="CDDepGroup"
+                                     IsChecked="{Binding Depository, Converter={StaticResource StringEqualsConverter}, ConverterParameter=CDSL}" />
+                        <RadioButton Content="NSDL" GroupName="CDDepGroup"
+                                     IsChecked="{Binding Depository, Converter={StaticResource StringEqualsConverter}, ConverterParameter=NSDL}" />
+                    </HorizontalStackLayout>
+
+                    <!-- CDSL sequence + Generate Bendem -->
+                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                        <Entry Grid.Column="0" Text="{Binding CdslSequenceNo}"
+                               Placeholder="CDSL Sequence File Name (e.g. 128307.001)" />
+                        <Button Grid.Column="1" Text="GENERATE BENDEM"
+                                Command="{Binding GenerateBendemCommand}"
+                                BackgroundColor="#5C6BC0" TextColor="White" />
+                    </Grid>
+
+                    <!-- Bendem Verification row -->
+                    <Grid ColumnDefinitions="*,Auto,Auto,Auto" ColumnSpacing="6">
+                        <Entry Grid.Column="0" Text="{Binding VerifiedFilePath}"
+                               Placeholder="Select verified .OUT or .TXT return file" IsReadOnly="True" />
+                        <Button Grid.Column="1" Text="Browse"
+                                Command="{Binding BrowseVerifiedFileCommand}" />
+                        <Button Grid.Column="2" Text="BENDEM VERIFICATION"
+                                Command="{Binding VerifyBendemCommand}"
+                                BackgroundColor="ForestGreen" TextColor="White" />
+                        <Button Grid.Column="3" Text="Delete"
+                                Command="{Binding DeleteVerificationCommand}"
+                                BackgroundColor="Crimson" TextColor="White" />
+                    </Grid>
+
+                    <!-- Merge Bendem -->
+                    <Button Text="MERGE BENDEM" Command="{Binding MergeBendemCommand}"
+                            BackgroundColor="{StaticResource Accent}" TextColor="White"
+                            HorizontalOptions="Start" />
+
+                    <!-- Bendem files table -->
+                    <Label Text="Generated &amp; Verified Bendem Files:" FontAttributes="Bold" Margin="0,6,0,0" />
+                    <CollectionView ItemsSource="{Binding BendemFiles}" HeightRequest="130">
+                        <CollectionView.Header>
+                            <Grid ColumnDefinitions="50,70,120,*,80" Padding="4"
+                                  BackgroundColor="{StaticResource Primary}">
+                                <Label Text="ID" TextColor="White" FontAttributes="Bold" />
+                                <Label Grid.Column="1" Text="Depository" TextColor="White" FontAttributes="Bold" />
+                                <Label Grid.Column="2" Text="Sequence No" TextColor="White" FontAttributes="Bold" />
+                                <Label Grid.Column="3" Text="File Path" TextColor="White" FontAttributes="Bold" />
+                                <Label Grid.Column="4" Text="Verified?" TextColor="White" FontAttributes="Bold" />
+                            </Grid>
+                        </CollectionView.Header>
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate x:DataType="models:BendemFile">
+                                <Grid ColumnDefinitions="50,70,120,*,80" Padding="4">
+                                    <Label Text="{Binding Id}" />
+                                    <Label Grid.Column="1" Text="{Binding Depository}" />
+                                    <Label Grid.Column="2" Text="{Binding SequenceNo}" />
+                                    <Label Grid.Column="3" Text="{Binding GeneratedPath}"
+                                           LineBreakMode="TailTruncation" />
+                                    <Label Grid.Column="4" Text="{Binding VerifiedFlag}" />
+                                </Grid>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- ═══════════════════════════════════════════════════════════
+                 SECTION 3: EMAIL TO BANKS
+                 ═══════════════════════════════════════════════════════════ -->
+            <Border Stroke="#D62828" StrokeThickness="1" Padding="12" BackgroundColor="#FDFDFD">
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="Step 3 — Email to Banks" FontAttributes="Bold" FontSize="13" />
+
+                    <!-- Select Day -->
+                    <HorizontalStackLayout Spacing="12">
+                        <Label Text="Select Day:" VerticalOptions="Center" />
+                        <Picker ItemsSource="{Binding DayOptions}" SelectedItem="{Binding SelectedDay}"
+                                WidthRequest="80" />
+                    </HorizontalStackLayout>
+
+                    <!-- Select All -->
+                    <HorizontalStackLayout Spacing="8">
+                        <CheckBox IsChecked="{Binding SelectAllBanks}" />
+                        <Label Text="Select All Banks" VerticalOptions="Center" FontAttributes="Bold" />
+                    </HorizontalStackLayout>
+
+                    <!-- Bank Checklist -->
+                    <CollectionView ItemsSource="{Binding Banks}" HeightRequest="180"
+                                    BackgroundColor="#F7F7F7">
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate x:DataType="models:BankSelectionItem">
+                                <HorizontalStackLayout Spacing="8" Padding="4,2">
+                                    <CheckBox IsChecked="{Binding IsSelected}" />
+                                    <Label VerticalOptions="Center">
+                                        <Label.Text>
+                                            <MultiBinding StringFormat="{}{0}  —  {1}">
+                                                <Binding Path="BankCode" />
+                                                <Binding Path="BankName" />
+                                            </MultiBinding>
+                                        </Label.Text>
+                                    </Label>
+                                </HorizontalStackLayout>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
+
+                    <!-- Email Action Buttons -->
+                    <FlexLayout Direction="Row" Wrap="Wrap" AlignItems="Center">
+                        <Button Text="DAY WISE DATA" Command="{Binding GenerateDayWiseDataCommand}"
+                                BackgroundColor="{StaticResource Primary}" TextColor="White" Margin="4" />
+                        <Button Text="ZIP FILE" Command="{Binding ZipFileCommand}"
+                                BackgroundColor="#5C6BC0" TextColor="White" Margin="4" />
+                        <Button Text="EMAIL TO BANKS" Command="{Binding EmailToBanksCommand}"
+                                BackgroundColor="#D62828" TextColor="White" Margin="4" />
+                    </FlexLayout>
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- ═══════════════════════════════════════════════════════════
+                 STATUS BAR
+                 ═══════════════════════════════════════════════════════════ -->
+            <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" />
+            <Label Text="{Binding StatusMessage}" TextColor="{StaticResource Accent}"
+                   FontAttributes="Bold" />
+
+            <!-- Bid preview grid -->
+            <Label Text="Uploaded Bids (Preview):" FontAttributes="Bold" Margin="0,8,0,0" />
+            <CollectionView ItemsSource="{Binding PreviewRows}" HeightRequest="200">
+                <CollectionView.Header>
+                    <Grid ColumnDefinitions="70,100,90,90,80,90" Padding="4"
+                          BackgroundColor="{StaticResource Primary}">
+                        <Label Text="IPO ID" TextColor="White" FontAttributes="Bold" />
+                        <Label Grid.Column="1" Text="Client ID" TextColor="White" FontAttributes="Bold" />
+                        <Label Grid.Column="2" Text="Order No" TextColor="White" FontAttributes="Bold" />
+                        <Label Grid.Column="3" Text="Symbol" TextColor="White" FontAttributes="Bold" />
+                        <Label Grid.Column="4" Text="Qty" TextColor="White" FontAttributes="Bold" />
+                        <Label Grid.Column="5" Text="Bank Code" TextColor="White" FontAttributes="Bold" />
+                    </Grid>
+                </CollectionView.Header>
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="models:ApplnsxBid">
+                        <Grid ColumnDefinitions="70,100,90,90,80,90" Padding="4">
+                            <Label Text="{Binding IPO_ID}" />
+                            <Label Grid.Column="1" Text="{Binding ClientId}" />
+                            <Label Grid.Column="2" Text="{Binding OrderNo}" />
+                            <Label Grid.Column="3" Text="{Binding Symbol}" />
+                            <Label Grid.Column="4" Text="{Binding Quantity}" />
+                            <Label Grid.Column="5" Text="{Binding BankCode}" />
+                        </Grid>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

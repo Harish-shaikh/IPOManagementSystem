@@ -8,9 +8,11 @@ using System.Collections.ObjectModel;
 namespace IPOProcessingSystem.ViewModels;
 
 /// <summary>
-/// Full Reconciliation ViewModel covering all 10 tabs:
-/// VIEW EXCEL | TRANSFER TO SQL | CLEAN DATA SUMMARY | APPLNSX UNMATCH |
-/// APPLNSX MATCH | SCHEDULE UNMATCH | REJECTION DATA | NIL BANK | SEARCH+UPDATE
+/// Full Reconciliation ViewModel — 10 tabs per spec §2.5.1:
+/// VIEW EXCEL | TRANSFER TO SQL | CLEAN DATA SUMMARY | APPLNSX UNMATCH CASE |
+/// APPLNSX MATCH CASE | SCHEDULE UNMATCH | SCHEDULE UNMATCH I | SCHEDULE UNMATCH II |
+/// REJECTION DATA | NIL BANK
+/// Business rule: Bank file is ALWAYS the source of truth during reconciliation.
 /// </summary>
 public partial class ReconciliationViewModel : BaseViewModel
 {
@@ -18,60 +20,102 @@ public partial class ReconciliationViewModel : BaseViewModel
     private readonly IAlertService _alertService;
     private readonly DatabaseService _dbService;
 
-    // ── Common ───────────────────────────────────────────────────────────────
+    // ── Common ────────────────────────────────────────────────────────────────
     [ObservableProperty] private int ipoId;
-    [ObservableProperty] private string selectedBankCode = string.Empty;
-    [ObservableProperty] private string reconType = "NON ASBA"; // NON ASBA / ASBA
-    [ObservableProperty] private string currentTab = "VIEW EXCEL";
+    [ObservableProperty] private string reconType = "NON-ASBA"; // NON-ASBA / ASBA
+    [ObservableProperty] private string activeTab = "ViewExcel";
 
-    // ── VIEW EXCEL tab ───────────────────────────────────────────────────────
+    // Tab visibility properties
+    public bool IsTabViewExcel      => ActiveTab == "ViewExcel";
+    public bool IsTabTransferToSql  => ActiveTab == "TransferToSql";
+    public bool IsTabCleanData      => ActiveTab == "CleanData";
+    public bool IsTabApplnsxUnmatch => ActiveTab == "ApplnsxUnmatch";
+    public bool IsTabApplnsxMatch   => ActiveTab == "ApplnsxMatch";
+    public bool IsTabSchedUnmatch   => ActiveTab == "SchedUnmatch";
+    public bool IsTabSchedUnmatchI  => ActiveTab == "SchedUnmatchI";
+    public bool IsTabSchedUnmatchII => ActiveTab == "SchedUnmatchII";
+    public bool IsTabRejectionData  => ActiveTab == "RejectionData";
+    public bool IsTabNilBank        => ActiveTab == "NilBank";
+
+    // ── VIEW EXCEL tab ────────────────────────────────────────────────────────
     [ObservableProperty] private string filePath = string.Empty;
-    [ObservableProperty] private string fileType = "Excel"; // Excel / CSV
+    [ObservableProperty] private string selectedFileType = "Excel"; // Excel / CSV
     [ObservableProperty] private bool hasHeader = true;
+    [ObservableProperty] private string selectedBankCode = string.Empty;
     [ObservableProperty] private int fileRecordCount;
-    private List<Dictionary<string, object>> _stagedRows = new();
+    [ObservableProperty] private bool hasMultipleSheets;
+    [ObservableProperty] private string selectedSheet = string.Empty;
+    public ObservableCollection<string> FileTypes { get; } = new() { "Excel", "CSV" };
+    public ObservableCollection<string> SheetNames { get; } = new();
+    public ObservableCollection<string> BankNames { get; } = new();
+    public ObservableCollection<string> PendingBanks { get; } = new();
+    public ObservableCollection<string> CompletedBanks { get; } = new();
+    public ObservableCollection<string> PreviewRows { get; } = new();  // raw string rows for VIEW EXCEL
 
-    // ── TRANSFER TO SQL tab ──────────────────────────────────────────────────
-    // Left = internal SQL fields, Right = excel columns from file
-    public ObservableCollection<string> SqlFields { get; } = new()
+    // ── TRANSFER TO SQL tab ───────────────────────────────────────────────────
+    private readonly Dictionary<string, string> _columnMap = new();
+    public ObservableCollection<string> SystemColumns { get; } = new()
     {
         "FormNo","NAME","DEBENT","AMOUNT","PAN","DPID","CLID","Ref_No","ACNO","REMARK","OrderNo","Amount_Blocked"
     };
     public ObservableCollection<string> ExcelColumns { get; } = new();
-    public ObservableCollection<ColumnMappingRow> ColumnMappingPairs { get; } = new();
+    [ObservableProperty] private string? selectedSystemColumn;
+    [ObservableProperty] private string? selectedExcelColumn;
+    [ObservableProperty] private string mappingStatus = string.Empty;
 
-    // ── CLEAN DATA SUMMARY tab ───────────────────────────────────────────────
-    [ObservableProperty] private int totalRecords;
-    [ObservableProperty] private decimal totalAmount;
-    [ObservableProperty] private int matchedRecords;
-    [ObservableProperty] private decimal matchedAmount;
-    [ObservableProperty] private int unmatchedRecords;
-    [ObservableProperty] private decimal unmatchedAmount;
+    // ── CLEAN DATA SUMMARY tab ────────────────────────────────────────────────
+    [ObservableProperty] private int applnsxTotalRecords;
+    [ObservableProperty] private decimal applnsxTotalAmount;
+    [ObservableProperty] private int applnsxMatchedRecords;
+    [ObservableProperty] private decimal applnsxMatchedAmount;
+    [ObservableProperty] private int applnsxUnmatchedRecords;
+    [ObservableProperty] private decimal applnsxUnmatchedAmount;
     [ObservableProperty] private int excelTotalRecords;
     [ObservableProperty] private decimal excelTotalAmount;
+    [ObservableProperty] private int excelMatchedRecords;
+    [ObservableProperty] private decimal excelMatchedAmount;
+    [ObservableProperty] private int excelUnmatchedRecords;
+    [ObservableProperty] private decimal excelUnmatchedAmount;
 
-    // ── UNMATCH tabs ─────────────────────────────────────────────────────────
+    // Search and Update panel (Clean Data Summary)
+    [ObservableProperty] private bool showSearchUpdatePanel;
+    [ObservableProperty] private string reconSearchQuery = string.Empty;
+    public ObservableCollection<ApplnsxBid> ReconSearchResults { get; } = new();
+    [ObservableProperty] private ApplnsxBid? selectedReconBid;
+    [ObservableProperty] private string newBankCode = string.Empty;
+
+    public string ReconVerdictText => ApplnsxTotalRecords == ExcelTotalRecords && ApplnsxTotalAmount == ExcelTotalAmount
+        ? $"✅ RECONCILED — Both totals match ({ApplnsxTotalRecords} records, ₹{ApplnsxTotalAmount:N0})"
+        : $"❌ MISMATCH — APPLNSX: {ApplnsxTotalRecords} recs / ₹{ApplnsxTotalAmount:N0} | Bank: {ExcelTotalRecords} recs / ₹{ExcelTotalAmount:N0}";
+    public Color ReconMatchColor => ApplnsxTotalRecords == ExcelTotalRecords && ApplnsxTotalAmount == ExcelTotalAmount
+        ? Colors.ForestGreen : Colors.Crimson;
+
+    // ── APPLNSX UNMATCH CASE tab ──────────────────────────────────────────────
     public ObservableCollection<UnmatchRecord> ApplnsxUnmatch { get; } = new();
-    public ObservableCollection<UnmatchRecord> ScheduleUnmatch { get; } = new();
-    public ObservableCollection<UnmatchRecord> AmountUnmatch { get; } = new();
-
-    // ── REJECTION DATA tab ───────────────────────────────────────────────────
-    public ObservableCollection<TechnicalRejection> RejectionData { get; } = new();
-    [ObservableProperty] private TechnicalRejection? selectedRejection;
-
-    // ── SEARCH AND UPDATE ────────────────────────────────────────────────────
+    [ObservableProperty] private UnmatchRecord? selectedUnmatchRecord;
     [ObservableProperty] private string searchFormNo = string.Empty;
-    [ObservableProperty] private ApplnsxBid? selectedBid;
     [ObservableProperty] private string updateBankCode = string.Empty;
-    [ObservableProperty] private string updateBankName = string.Empty;
-    public ObservableCollection<ApplnsxBid> SearchResults { get; } = new();
 
-    // ── NIL BANK tab ─────────────────────────────────────────────────────────
-    [ObservableProperty] private bool isMemberAsba;
+    // ── APPLNSX MATCH CASE tab ────────────────────────────────────────────────
+    public ObservableCollection<ApplnsxBid> ApplnsxMatch { get; } = new();
 
-    // ── Bank lists ───────────────────────────────────────────────────────────
-    public ObservableCollection<string> PendingBanks { get; } = new();
-    public ObservableCollection<string> CompletedBanks { get; } = new();
+    // ── SCHEDULE UNMATCH tabs ─────────────────────────────────────────────────
+    public ObservableCollection<ApplnsxBid> ScheduleUnmatch { get; } = new();
+    public ObservableCollection<ApplnsxBid> ScheduleUnmatchI { get; } = new();
+    public ObservableCollection<ApplnsxBid> ScheduleUnmatchII { get; } = new();
+
+    // ── REJECTION DATA tab ────────────────────────────────────────────────────
+    public ObservableCollection<RejectionRecord> RejectedRecords { get; } = new();
+    [ObservableProperty] private string rejSubTab = "Update"; // Update / Insert
+    [ObservableProperty] private string rejSearchFormNo = string.Empty;
+    [ObservableProperty] private string rejFilterBankCode = string.Empty;
+    public bool IsRejSubTabInsert => RejSubTab == "Insert";
+
+    // ── NIL BANK tab ──────────────────────────────────────────────────────────
+    [ObservableProperty] private string nilBankCode = string.Empty;
+    [ObservableProperty] private string nilAsbaType = "BANK"; // BANK / MEMBER
+    [ObservableProperty] private int nilBankRecordCount;
+    public ObservableCollection<ApplnsxBid> NilBankRows { get; } = new();
 
     public ReconciliationViewModel(IReconciliationService reconService, IAlertService alertService, DatabaseService dbService)
     {
@@ -79,33 +123,45 @@ public partial class ReconciliationViewModel : BaseViewModel
         _alertService = alertService;
         _dbService = dbService;
         Title = "Bank Reconciliation (T+2)";
+        Task.Run(LoadBanksAsync);
+    }
+
+    // ────────────────────────────────────────────────────────────────────────
+    // Tab switching
+    // ────────────────────────────────────────────────────────────────────────
+    [RelayCommand]
+    private void SwitchTab(string tab)
+    {
+        ActiveTab = tab;
+        OnPropertyChanged(nameof(IsTabViewExcel));
+        OnPropertyChanged(nameof(IsTabTransferToSql));
+        OnPropertyChanged(nameof(IsTabCleanData));
+        OnPropertyChanged(nameof(IsTabApplnsxUnmatch));
+        OnPropertyChanged(nameof(IsTabApplnsxMatch));
+        OnPropertyChanged(nameof(IsTabSchedUnmatch));
+        OnPropertyChanged(nameof(IsTabSchedUnmatchI));
+        OnPropertyChanged(nameof(IsTabSchedUnmatchII));
+        OnPropertyChanged(nameof(IsTabRejectionData));
+        OnPropertyChanged(nameof(IsTabNilBank));
     }
 
     [RelayCommand]
-    private async Task LoadBanksAsync()
+    private void SwitchRejSubTab(string subTab)
     {
-        var banks = await _dbService.Connection.Table<BankMaster>()
-            .Where(b => !b.IsNilForCurrentIpo).ToListAsync();
-        var completed = await _dbService.Connection.Table<ReconciliationSummary>()
-            .Where(r => r.IPO_ID == IpoId && r.MatchStatus == "MATCHED").ToListAsync();
-        var completedCodes = completed.Select(c => c.BankCode).ToHashSet();
-
-        PendingBanks.Clear();
-        CompletedBanks.Clear();
-        foreach (var b in banks)
-        {
-            if (completedCodes.Contains(b.BankCode)) CompletedBanks.Add(b.BankCode);
-            else PendingBanks.Add(b.BankCode);
-        }
+        RejSubTab = subTab;
+        OnPropertyChanged(nameof(IsRejSubTabInsert));
     }
 
-    // ── VIEW EXCEL ────────────────────────────────────────────────────────────
+    // ────────────────────────────────────────────────────────────────────────
+    // VIEW EXCEL tab commands
+    // ────────────────────────────────────────────────────────────────────────
     [RelayCommand]
     private async Task BrowseAsync()
     {
+        var ext = SelectedFileType == "CSV" ? ".csv" : ".xlsx";
         var result = await FilePicker.Default.PickAsync(new PickOptions
         {
-            PickerTitle = "Select Bank Schedule (Excel/CSV)"
+            PickerTitle = $"Select Bank Schedule File ({ext})"
         });
         if (result != null) FilePath = result.FullPath;
     }
@@ -113,201 +169,529 @@ public partial class ReconciliationViewModel : BaseViewModel
     [RelayCommand]
     private async Task DisplayContentAsync()
     {
-        if (string.IsNullOrWhiteSpace(FilePath)) { StatusMessage = "Select file first."; return; }
+        if (string.IsNullOrWhiteSpace(FilePath)) { StatusMessage = "Browse a file first."; return; }
         IsBusy = true;
         try
         {
-            // Build basic column map for display (all columns mapped to themselves)
-            var basicMap = new Dictionary<string, string>();
-            foreach (var field in SqlFields) basicMap[field] = field;
+            // Load the bank file using ReconciliationService
+            var rows = await _reconService.ImportBankScheduleAsync(FilePath, _columnMap);
+            FileRecordCount = rows.Count;
+            PreviewRows.Clear();
+            foreach (var row in rows.Take(200))
+                PreviewRows.Add(string.Join(" | ", row.Values.Select(v => v?.ToString() ?? "")));
 
-            _stagedRows = await _reconService.ImportBankScheduleAsync(FilePath, basicMap);
-            FileRecordCount = _stagedRows.Count;
-
-            // Populate Excel column headers for column-mapping tab
-            ExcelColumns.Clear();
-            if (_stagedRows.Any())
-                foreach (var col in _stagedRows.First().Keys) ExcelColumns.Add(col);
-
-            StatusMessage = $"{FileRecordCount} record(s) loaded.";
-        }
-        catch (Exception ex)
-        {
-            await _alertService.ShowErrorAsync($"Error reading file: {ex.Message}");
+            // Populate excel columns for mapping
+            if (rows.Any())
+            {
+                ExcelColumns.Clear();
+                foreach (var key in rows[0].Keys) ExcelColumns.Add(key);
+            }
+            StatusMessage = $"Loaded {FileRecordCount} records from {Path.GetFileName(FilePath)}.";
         }
         finally { IsBusy = false; }
+    }
+
+    [RelayCommand]
+    private void ClearFile()
+    {
+        FilePath = string.Empty;
+        PreviewRows.Clear();
+        FileRecordCount = 0;
+        StatusMessage = "File cleared.";
     }
 
     [RelayCommand]
     private async Task DeleteReconAsync()
     {
-        if (!await _alertService.ConfirmAsync("Delete Recon", $"Delete all recon data for bank {SelectedBankCode}?")) return;
-        var old = await _dbService.Connection.Table<ReconciliationSummary>()
-            .Where(r => r.IPO_ID == IpoId && r.BankCode == SelectedBankCode).ToListAsync();
-        foreach (var o in old) await _dbService.Connection.DeleteAsync(o);
-        StatusMessage = "Recon deleted.";
+        if (!await _alertService.ConfirmAsync("Delete Recon", $"Delete all recon data for bank '{SelectedBankCode}'? This cannot be undone.")) return;
+        // Delete ReconSession entries for this bank
+        var sessions = await _dbService.Connection.Table<ReconSession>().Where(s => s.IPO_Id == IpoId && s.BankCode == SelectedBankCode).ToListAsync();
+        foreach (var s in sessions) await _dbService.Connection.DeleteAsync(s);
+        StatusMessage = $"Recon data deleted for {SelectedBankCode}.";
+        await LoadBanksAsync();
     }
 
-    // ── TRANSFER TO SQL ───────────────────────────────────────────────────────
+    [RelayCommand]
+    private void LoadSheet() => StatusMessage = $"Sheet '{SelectedSheet}' loaded.";
+
+    [RelayCommand]
+    public async Task LoadBanksAsync()
+    {
+        var allBanks = await _dbService.Connection.Table<BankMaster>().ToListAsync();
+        var nilSessions = await _dbService.Connection.Table<ReconSession>()
+            .Where(s => s.IPO_Id == IpoId && s.Status == "Nil").ToListAsync();
+        var nilCodes = nilSessions.Select(s => s.BankCode).ToHashSet();
+
+        var completedSessions = await _dbService.Connection.Table<ReconSession>()
+            .Where(s => s.IPO_Id == IpoId && s.Status == "Completed").ToListAsync();
+        var completedCodes = completedSessions.Select(s => s.BankCode).ToHashSet();
+
+        MainThread.BeginInvokeOnMainThread(() =>
+        {
+            BankNames.Clear();
+            PendingBanks.Clear();
+            CompletedBanks.Clear();
+
+            foreach (var b in allBanks)
+            {
+                BankNames.Add(b.BankCode);
+                if (nilCodes.Contains(b.BankCode)) continue;
+
+                if (completedCodes.Contains(b.BankCode))
+                    CompletedBanks.Add(b.BankCode);
+                else
+                    PendingBanks.Add(b.BankCode);
+            }
+            if (BankNames.Any() && string.IsNullOrEmpty(SelectedBankCode))
+                SelectedBankCode = BankNames.First();
+        });
+    }
+
+    // ────────────────────────────────────────────────────────────────────────
+    // TRANSFER TO SQL tab commands
+    // ────────────────────────────────────────────────────────────────────────
+    [RelayCommand]
+    private void MapColumnPair()
+    {
+        if (SelectedSystemColumn == null || SelectedExcelColumn == null) return;
+        _columnMap[SelectedSystemColumn] = SelectedExcelColumn;
+        MappingStatus = $"Mapped: {SelectedSystemColumn} ↔ {SelectedExcelColumn} ({_columnMap.Count} pairs total)";
+    }
+
     [RelayCommand]
     private async Task LoadMappingAsync()
     {
-        var saved = await _reconService.GetColumnMappingAsync(SelectedBankCode);
-        ColumnMappingPairs.Clear();
-        foreach (var m in saved)
-            ColumnMappingPairs.Add(new ColumnMappingRow { SqlField = m.TargetColumn, ExcelColumn = m.SourceColumn });
+        if (string.IsNullOrWhiteSpace(SelectedBankCode)) { StatusMessage = "Select a bank first."; return; }
+        var mappings = await _dbService.Connection.Table<ColumnMapping>().Where(m => m.BankCode == SelectedBankCode).ToListAsync();
+        _columnMap.Clear();
+        foreach (var m in mappings) _columnMap[m.TargetColumn] = m.SourceColumn;
+        MappingStatus = $"Loaded {_columnMap.Count} saved mappings for {SelectedBankCode}.";
     }
 
     [RelayCommand]
     private async Task SaveMappingAsync()
     {
-        var pairs = ColumnMappingPairs.Select(p => (p.ExcelColumn, p.SqlField)).ToList();
-        await _reconService.SaveColumnMappingAsync(SelectedBankCode, pairs);
-        await _alertService.ShowSuccessAsync("Column mapping saved.");
+        if (!_columnMap.Any()) { MappingStatus = "No pairs to save. Map at least one column pair."; return; }
+        foreach (var kv in _columnMap)
+        {
+            var existing = await _dbService.Connection.Table<ColumnMapping>()
+                .Where(m => m.BankCode == SelectedBankCode && m.TargetColumn == kv.Key).FirstOrDefaultAsync();
+            if (existing != null) { existing.SourceColumn = kv.Value; await _dbService.Connection.UpdateAsync(existing); }
+            else await _dbService.Connection.InsertAsync(new ColumnMapping { BankCode = SelectedBankCode, TargetColumn = kv.Key, SourceColumn = kv.Value });
+        }
+        MappingStatus = $"Mapping saved for {SelectedBankCode} ({_columnMap.Count} pairs).";
     }
 
     [RelayCommand]
-    private void AddMappingPair()
+    private void CleanMapping()
     {
-        ColumnMappingPairs.Add(new ColumnMappingRow());
+        _columnMap.Clear();
+        MappingStatus = "Column mapping cleared. Remap and save.";
     }
 
     [RelayCommand]
-    private async Task FinishTransferAsync()
+    private async Task FinishImportAsync()
     {
-        if (!_stagedRows.Any()) { StatusMessage = "Load file content first."; return; }
-        if (!await _alertService.ConfirmAsync("Finish Transfer", "Transfer bank schedule data to SQL?")) return;
+        if (!_columnMap.Any()) { await _alertService.ShowErrorAsync("No column mapping defined. Map columns first, then use FINISH."); return; }
+        if (!await _alertService.ConfirmAsync("Commit to SQL", $"Commit {FileRecordCount} records from {SelectedBankCode} into APPLNSX?")) return;
         IsBusy = true;
         try
         {
-            var columnMap = ColumnMappingPairs.ToDictionary(p => p.SqlField, p => p.ExcelColumn);
-            if (!columnMap.Any())
+            var rows = await _reconService.ImportBankScheduleAsync(FilePath, _columnMap);
+            int inserted = 0;
+            foreach (var row in rows)
             {
-                // Use display headers as-is
-                foreach (var field in SqlFields) columnMap[field] = field;
+                var bid = new ApplnsxBid
+                {
+                    IPO_ID = IpoId,
+                    BankCode = SelectedBankCode,
+                    FormNo = row.TryGetValue("FormNo", out var fn) ? fn?.ToString() ?? "" : "",
+                    Name = row.TryGetValue("NAME", out var nm) ? nm?.ToString() ?? "" : "",
+                    Quantity = row.TryGetValue("DEBENT", out var dbt) ? int.TryParse(dbt?.ToString(), out int q) ? q : 0 : 0,
+                    Amount = row.TryGetValue("AMOUNT", out var amt) ? decimal.TryParse(amt?.ToString(), out decimal a) ? a : 0 : 0,
+                    PAN = row.TryGetValue("PAN", out var pan) ? pan?.ToString() ?? "" : "",
+                    DPID = row.TryGetValue("DPID", out var dp) ? dp?.ToString() ?? "" : "",
+                    CLID = row.TryGetValue("CLID", out var cl) ? cl?.ToString() ?? "" : "",
+                    RefNo = row.TryGetValue("Ref_No", out var rn) ? rn?.ToString() ?? "" : "",
+                    AccountNo = row.TryGetValue("ACNO", out var ac) ? ac?.ToString() ?? "" : "",
+                    Remark = row.TryGetValue("REMARK", out var rk) ? rk?.ToString() ?? "" : "",
+                    OrderNo = row.TryGetValue("OrderNo", out var on) ? on?.ToString() ?? "" : "",
+                    IsBankFile = true,
+                    Status = "PENDING"
+                };
+                await _dbService.Connection.InsertAsync(bid);
+                inserted++;
             }
-            var bankRows = await _reconService.ImportBankScheduleAsync(FilePath, columnMap);
-            var summary = await _reconService.CompareAsync(IpoId, SelectedBankCode, bankRows);
-
-            TotalRecords = summary.TotalRecords;
-            TotalAmount = summary.TotalAmount;
-            MatchedRecords = summary.MatchedRecords;
-            MatchedAmount = summary.MatchedAmount;
-            UnmatchedRecords = summary.UnmatchedRecords;
-            UnmatchedAmount = summary.UnmatchedAmount;
-            ExcelTotalRecords = summary.ExcelTotalRecords;
-            ExcelTotalAmount = summary.ExcelTotalAmount;
-
-            await _alertService.ShowSuccessAsync("ASBA File Uploaded Successfully.");
-            await LoadUnmatchDataAsync();
-            CurrentTab = "CLEAN DATA SUMMARY";
+            // Mark session complete
+            await _dbService.Connection.InsertAsync(new ReconSession { IPO_Id = IpoId, BankCode = SelectedBankCode, Status = "Completed" });
+            PendingBanks.Remove(SelectedBankCode);
+            if (!CompletedBanks.Contains(SelectedBankCode)) CompletedBanks.Add(SelectedBankCode);
+            StatusMessage = $"{inserted} records committed for {SelectedBankCode}.";
+            await _alertService.ShowSuccessAsync($"ASBA File Uploaded Successfully for {SelectedBankCode}.", $"{inserted} records inserted.");
         }
         finally { IsBusy = false; }
     }
 
-    // ── CLEAN DATA SUMMARY ────────────────────────────────────────────────────
+    // ────────────────────────────────────────────────────────────────────────
+    // CLEAN DATA SUMMARY tab commands
+    // ────────────────────────────────────────────────────────────────────────
     [RelayCommand]
-    private async Task RunReconciliationAsync()
+    private async Task RefreshSummaryAsync()
     {
-        await FinishTransferAsync();
-        if (UnmatchedRecords == 0)
+        IsBusy = true;
+        try
         {
-            PendingBanks.Remove(SelectedBankCode);
-            CompletedBanks.Add(SelectedBankCode);
-            StatusMessage = "Reconciliation matched. Proceed to next bank.";
+            var applnsx = await _dbService.Connection.Table<ApplnsxBid>()
+                .Where(b => b.IPO_ID == IpoId && b.BankCode == SelectedBankCode).ToListAsync();
+            ApplnsxTotalRecords = applnsx.Count;
+            ApplnsxTotalAmount = applnsx.Sum(b => b.Amount);
+            var bankFile = await _dbService.Connection.Table<ApplnsxBid>()
+                .Where(b => b.IPO_ID == IpoId && b.BankCode == SelectedBankCode && b.IsBankFile).ToListAsync();
+            ExcelTotalRecords = bankFile.Count;
+            ExcelTotalAmount = bankFile.Sum(b => b.Amount);
+
+            OnPropertyChanged(nameof(ReconVerdictText));
+            OnPropertyChanged(nameof(ReconMatchColor));
+            StatusMessage = $"Summary refreshed for {SelectedBankCode}.";
         }
-        else
+        finally { IsBusy = false; }
+    }
+
+    [RelayCommand]
+    private void ShowAmountUnmatch() => StatusMessage = "Amount unmatch cases — use SEARCH AND UPDATE to investigate.";
+
+    partial void OnSelectedReconBidChanged(ApplnsxBid? value)
+    {
+        if (value != null)
         {
-            StatusMessage = $"{UnmatchedRecords} unmatched — review Unmatch tabs.";
+            NewBankCode = value.BankCode;
         }
     }
 
-    // ── UNMATCH ───────────────────────────────────────────────────────────────
-    private async Task LoadUnmatchDataAsync()
+    [RelayCommand]
+    private void SearchAndUpdate()
     {
-        var applnsxOnly = await _reconService.GetUnmatchRecordsAsync(IpoId, SelectedBankCode, "AVAILABLE_IN_APPLNSX_NOT_SCHEDULE");
-        ApplnsxUnmatch.Clear();
-        foreach (var u in applnsxOnly) ApplnsxUnmatch.Add(u);
+        ShowSearchUpdatePanel = !ShowSearchUpdatePanel;
+    }
 
-        var scheduleOnly = await _reconService.GetUnmatchRecordsAsync(IpoId, SelectedBankCode, "AVAILABLE_IN_SCHEDULE_NOT_APPLNSX");
-        ScheduleUnmatch.Clear();
-        foreach (var u in scheduleOnly) ScheduleUnmatch.Add(u);
+    [RelayCommand]
+    private void HideSearchUpdatePanel()
+    {
+        ShowSearchUpdatePanel = false;
+    }
 
-        var amountMismatch = await _reconService.GetUnmatchRecordsAsync(IpoId, SelectedBankCode, "AMOUNT_UNMATCH");
-        AmountUnmatch.Clear();
-        foreach (var u in amountMismatch) AmountUnmatch.Add(u);
+    [RelayCommand]
+    private async Task ExecuteReconSearchAsync()
+    {
+        if (string.IsNullOrWhiteSpace(ReconSearchQuery))
+        {
+            StatusMessage = "Please enter Form No, Order No, PAN or Client ID to search.";
+            return;
+        }
+
+        IsBusy = true;
+        try
+        {
+            string q = ReconSearchQuery.Trim();
+            var results = await _dbService.Connection.Table<ApplnsxBid>()
+                .Where(b => b.IPO_ID == IpoId && (b.FormNo.Contains(q) || b.OrderNo.Contains(q) || b.PAN.Contains(q) || b.ClientId.Contains(q)))
+                .Take(50)
+                .ToListAsync();
+
+            ReconSearchResults.Clear();
+            foreach (var r in results) ReconSearchResults.Add(r);
+
+            StatusMessage = $"Found {results.Count} record(s).";
+            if (results.Count > 0)
+            {
+                SelectedReconBid = results.First();
+            }
+        }
+        finally { IsBusy = false; }
+    }
+
+    [RelayCommand]
+    private async Task SaveReconBidUpdateAsync()
+    {
+        if (SelectedReconBid == null)
+        {
+            await _alertService.ShowAsync("Select Record", "Please select a record from the search results.");
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(NewBankCode))
+        {
+            await _alertService.ShowAsync("Bank Code Required", "Please enter or select a new Bank Code.");
+            return;
+        }
+
+        SelectedReconBid.BankCode = NewBankCode.Trim().ToUpperInvariant();
+        await _dbService.Connection.UpdateAsync(SelectedReconBid);
+
+        await _alertService.ShowSuccessAsync($"Updated Form {SelectedReconBid.FormNo} Bank Code to '{NewBankCode}'.");
+        StatusMessage = $"Updated Form {SelectedReconBid.FormNo} to bank {NewBankCode}.";
+        await RefreshSummaryAsync();
+    }
+
+    // ────────────────────────────────────────────────────────────────────────
+    // APPLNSX UNMATCH tab commands
+    // ────────────────────────────────────────────────────────────────────────
+    [RelayCommand]
+    private async Task LoadApplnsxUnmatchAsync()
+    {
+        IsBusy = true;
+        try
+        {
+            var bids = await _dbService.Connection.Table<ApplnsxBid>()
+                .Where(b => b.IPO_ID == IpoId && b.BankCode == SelectedBankCode && !b.IsBankFile).ToListAsync();
+            ApplnsxUnmatch.Clear();
+            foreach (var bid in bids)
+                ApplnsxUnmatch.Add(new UnmatchRecord { FormNo = bid.FormNo, BankCode = bid.BankCode, ExcelAmount = bid.Amount, UnmatchType = "APPLNSX only" });
+        }
+        finally { IsBusy = false; }
     }
 
     [RelayCommand]
     private async Task RejectUnmatchRecordAsync(UnmatchRecord record)
     {
-        if (!await _alertService.ConfirmAsync("Reject Record", $"Reject FormNo {record.FormNo} from {SelectedBankCode}?")) return;
-        // Find the ApplnsxBid row
-        var bid = await _dbService.Connection.Table<ApplnsxBid>()
-            .Where(b => b.IPO_ID == IpoId && b.OrderNo == record.FormNo).FirstOrDefaultAsync();
-        if (bid != null) await _reconService.RejectRecordAsync(bid.RowId, "RECON_UNMATCH");
-        record.Resolved = true;
-        await _dbService.Connection.UpdateAsync(record);
+        if (!await _alertService.ConfirmAsync("Reject Record", $"Reject application {record.FormNo}? This will move it to Rejection Data.")) return;
+        // Move to RejectionRecord table
+        await _dbService.Connection.InsertAsync(new RejectionRecord
+        {
+            IPO_Id = IpoId,
+            FormNo = record.FormNo,
+            BankCode = record.BankCode,
+            Status = "Active",
+            Remark = "APPLNSX Unmatch Rejection (Recon)"
+        });
         ApplnsxUnmatch.Remove(record);
-        await _alertService.ShowSuccessAsync("Record rejected and moved to Rejection Data.");
+        await _alertService.ShowSuccessAsync($"Application {record.FormNo} rejected and moved to Rejection Data.");
+        await RefreshSummaryAsync();
     }
 
-    // ── REJECTION DATA ────────────────────────────────────────────────────────
-    [RelayCommand]
-    private async Task LoadRejectionDataAsync()
-    {
-        var list = await _dbService.Connection.Table<TechnicalRejection>()
-            .Where(r => r.IPO_ID == IpoId).ToListAsync();
-        RejectionData.Clear();
-        foreach (var r in list) RejectionData.Add(r);
-    }
-
-    [RelayCommand]
-    private async Task InsertIntoApplnsxAsync(TechnicalRejection rejection)
-    {
-        if (!await _alertService.ConfirmAsync("Insert Into Applnsx", "Re-add this rejected record to Applnsx?")) return;
-        await _reconService.RestoreRejectedRecordAsync(rejection.RejectionId);
-        await _dbService.Connection.DeleteAsync(rejection);
-        RejectionData.Remove(rejection);
-        await _alertService.ShowSuccessAsync("Record re-inserted into Applnsx.");
-    }
-
-    // ── SEARCH AND UPDATE ─────────────────────────────────────────────────────
     [RelayCommand]
     private async Task SearchAsync()
     {
         if (string.IsNullOrWhiteSpace(SearchFormNo)) return;
         var results = await _dbService.Connection.Table<ApplnsxBid>()
-            .Where(b => b.IPO_ID == IpoId && b.OrderNo == SearchFormNo).ToListAsync();
-        SearchResults.Clear();
-        foreach (var b in results) SearchResults.Add(b);
+            .Where(b => b.IPO_ID == IpoId && (b.FormNo == SearchFormNo || b.OrderNo == SearchFormNo)).ToListAsync();
+        if (!results.Any()) { StatusMessage = $"No record found for '{SearchFormNo}'."; return; }
+        var r = results.First();
+        UpdateBankCode = r.BankCode;
+        StatusMessage = $"Found: {r.FormNo} | Bank: {r.BankCode} | Amount: ₹{r.Amount:N0}";
     }
 
     [RelayCommand]
     private async Task UpdateBankCodeAsync()
     {
-        if (SelectedBid == null || string.IsNullOrWhiteSpace(UpdateBankCode)) return;
-        await _reconService.UpdateBankCodeAsync(SelectedBid.RowId, UpdateBankCode, UpdateBankName);
-        await _alertService.ShowSuccessAsync("UPDATE SUCCESSFULL");
-        SelectedBid.BankCode = UpdateBankCode;
-        SelectedBid.BankName = UpdateBankName;
+        if (string.IsNullOrWhiteSpace(SearchFormNo) || string.IsNullOrWhiteSpace(UpdateBankCode)) return;
+        var bid = await _dbService.Connection.Table<ApplnsxBid>()
+            .Where(b => b.IPO_ID == IpoId && b.FormNo == SearchFormNo).FirstOrDefaultAsync();
+        if (bid == null) { StatusMessage = "Record not found."; return; }
+        bid.BankCode = UpdateBankCode;
+        await _dbService.Connection.UpdateAsync(bid);
+        StatusMessage = $"UPDATE SUCCESSFULL — {bid.FormNo} bank code updated to {UpdateBankCode}.";
     }
 
-    // ── NIL BANK ─────────────────────────────────────────────────────────────
+    // ────────────────────────────────────────────────────────────────────────
+    // APPLNSX MATCH tab commands
+    // ────────────────────────────────────────────────────────────────────────
+    [RelayCommand]
+    private async Task LoadMatchedRecordsAsync()
+    {
+        IsBusy = true;
+        try
+        {
+            var matched = await _dbService.Connection.Table<ApplnsxBid>()
+                .Where(b => b.IPO_ID == IpoId && b.BankCode == SelectedBankCode && b.Status == "MATCHED").ToListAsync();
+            ApplnsxMatch.Clear();
+            foreach (var m in matched) ApplnsxMatch.Add(m);
+            StatusMessage = $"Loaded {matched.Count} matched records.";
+        }
+        finally { IsBusy = false; }
+    }
+
+    // ────────────────────────────────────────────────────────────────────────
+    // SCHEDULE UNMATCH tab commands
+    // ────────────────────────────────────────────────────────────────────────
+    [RelayCommand]
+    private async Task LoadSchedUnmatchAsync()
+    {
+        IsBusy = true;
+        try
+        {
+            // Records in APPLNSX with a different bank code than currently selected
+            var records = await _dbService.Connection.Table<ApplnsxBid>()
+                .Where(b => b.IPO_ID == IpoId && b.BankCode != SelectedBankCode && !string.IsNullOrEmpty(b.FormNo)).ToListAsync();
+            ScheduleUnmatch.Clear();
+            foreach (var r in records.Take(500)) ScheduleUnmatch.Add(r);
+        }
+        finally { IsBusy = false; }
+    }
+
+    [RelayCommand]
+    private async Task LoadSchedUnmatchIAsync()
+    {
+        IsBusy = true;
+        try
+        {
+            var records = await _dbService.Connection.Table<ApplnsxBid>()
+                .Where(b => b.IPO_ID == IpoId && b.BankCode != SelectedBankCode).ToListAsync();
+            ScheduleUnmatchI.Clear();
+            foreach (var r in records.Take(500)) ScheduleUnmatchI.Add(r);
+        }
+        finally { IsBusy = false; }
+    }
+
+    [RelayCommand]
+    private async Task LoadSchedUnmatchIIAsync()
+    {
+        IsBusy = true;
+        try
+        {
+            var records = await _dbService.Connection.Table<ApplnsxBid>()
+                .Where(b => b.IPO_ID == IpoId && b.BankCode != SelectedBankCode).ToListAsync();
+            ScheduleUnmatchII.Clear();
+            foreach (var r in records.Take(500)) ScheduleUnmatchII.Add(r);
+        }
+        finally { IsBusy = false; }
+    }
+
+    // ────────────────────────────────────────────────────────────────────────
+    // REJECTION DATA tab commands
+    // ────────────────────────────────────────────────────────────────────────
+    [RelayCommand]
+    private async Task LoadRejectionDataAsync()
+    {
+        IsBusy = true;
+        try
+        {
+            var query = _dbService.Connection.Table<RejectionRecord>().Where(r => r.IPO_Id == IpoId);
+            if (!string.IsNullOrWhiteSpace(RejFilterBankCode))
+                query = query.Where(r => r.BankCode == RejFilterBankCode);
+            if (!string.IsNullOrWhiteSpace(RejSearchFormNo))
+                query = query.Where(r => r.FormNo.Contains(RejSearchFormNo));
+            var records = await query.ToListAsync();
+            RejectedRecords.Clear();
+            foreach (var r in records) RejectedRecords.Add(r);
+            StatusMessage = $"Loaded {records.Count} rejected record(s).";
+        }
+        finally { IsBusy = false; }
+    }
+
+    [RelayCommand]
+    private async Task InsertIntoApplnsxAsync()
+    {
+        var selected = RejectedRecords.Where(r => r.IsSelected).ToList();
+        if (!selected.Any()) { await _alertService.ShowErrorAsync("Select at least one record to reinstate."); return; }
+        if (!await _alertService.ConfirmAsync("Reinstate Records", $"Reinstate {selected.Count} record(s) into APPLNSX?")) return;
+        IsBusy = true;
+        try
+        {
+            foreach (var rej in selected)
+            {
+                rej.Status = "Reverted";
+                await _dbService.Connection.UpdateAsync(rej);
+                // Re-insert into APPLNSX with pending status
+                await _dbService.Connection.InsertAsync(new ApplnsxBid
+                {
+                    IPO_ID = IpoId, FormNo = rej.FormNo, BankCode = rej.BankCode,
+                    Name = rej.Name, Amount = rej.Amount, Quantity = (int)rej.Debent,
+                    PAN = rej.PAN, CLID = rej.CLID, AccountNo = rej.ACNO, Remark = rej.Remark,
+                    Status = "PENDING"
+                });
+                RejectedRecords.Remove(rej);
+            }
+            await _alertService.ShowSuccessAsync($"{selected.Count} record(s) reinstated into APPLNSX.");
+        }
+        finally { IsBusy = false; }
+    }
+
+    // ────────────────────────────────────────────────────────────────────────
+    // NIL BANK tab commands
+    // ────────────────────────────────────────────────────────────────────────
+    [RelayCommand]
+    private async Task ShowNilBankDetailsAsync()
+    {
+        IsBusy = true;
+        try
+        {
+            var rows = await _dbService.Connection.Table<ApplnsxBid>()
+                .Where(b => b.IPO_ID == IpoId && b.BankCode == NilBankCode).ToListAsync();
+            NilBankRows.Clear();
+            foreach (var r in rows) NilBankRows.Add(r);
+            NilBankRecordCount = rows.Count;
+        }
+        finally { IsBusy = false; }
+    }
+
     [RelayCommand]
     private async Task MarkBankNilAsync()
     {
-        if (string.IsNullOrWhiteSpace(SelectedBankCode)) return;
-        if (!await _alertService.ConfirmAsync("Nil Bank", $"Mark {SelectedBankCode} as NIL for this IPO?")) return;
-        await _reconService.MarkBankAsNilAsync(IpoId, SelectedBankCode, IsMemberAsba);
-        PendingBanks.Remove(SelectedBankCode);
-        await _alertService.ShowSuccessAsync($"{SelectedBankCode} marked as NIL and removed from active list.");
+        if (string.IsNullOrWhiteSpace(NilBankCode)) { StatusMessage = "Select a bank first."; return; }
+        if (NilBankRecordCount > 0)
+        {
+            await _alertService.ShowErrorAsync($"{NilBankCode} has {NilBankRecordCount} records. Cannot mark as NIL until all records are resolved.");
+            return;
+        }
+        if (!await _alertService.ConfirmAsync("Mark NIL Bank", $"Mark '{NilBankCode}' as NIL (removes it from active recon list)?")) return;
+        await _dbService.Connection.InsertAsync(new ReconSession { IPO_Id = IpoId, BankCode = NilBankCode, Status = "Nil" });
+        PendingBanks.Remove(NilBankCode);
+        NilBankRows.Clear();
+        NilBankRecordCount = 0;
+        StatusMessage = $"{NilBankCode} marked as NIL and removed from active reconciliation.";
     }
+
+    // ────────────────────────────────────────────────────────────────────────
+    // Existing commands kept for backwards compatibility
+    // ────────────────────────────────────────────────────────────────────────
+    [RelayCommand]
+    private async Task RunReconciliationAsync()
+    {
+        IsBusy = true;
+        try
+        {
+            var result = await _reconService.GetSummaryAsync(IpoId, SelectedBankCode);
+            ApplnsxTotalRecords = result.TotalRecords;
+            ExcelTotalRecords = result.ExcelTotalRecords;
+            ApplnsxTotalAmount = result.TotalAmount;
+            ExcelTotalAmount = result.ExcelTotalAmount;
+            ApplnsxMatchedRecords = result.MatchedRecords;
+            ApplnsxMatchedAmount = result.MatchedAmount;
+            ApplnsxUnmatchedRecords = result.UnmatchedRecords;
+            ApplnsxUnmatchedAmount = result.UnmatchedAmount;
+            OnPropertyChanged(nameof(ReconVerdictText));
+            OnPropertyChanged(nameof(ReconMatchColor));
+            StatusMessage = $"Reconciliation summary updated for {SelectedBankCode}.";
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = $"Reconciliation error: {ex.Message}";
+        }
+        finally { IsBusy = false; }
+    }
+
+    partial void OnActiveTabChanged(string value)
+    {
+        // notify all tab visibility bindings
+        OnPropertyChanged(nameof(IsTabViewExcel));
+        OnPropertyChanged(nameof(IsTabTransferToSql));
+        OnPropertyChanged(nameof(IsTabCleanData));
+        OnPropertyChanged(nameof(IsTabApplnsxUnmatch));
+        OnPropertyChanged(nameof(IsTabApplnsxMatch));
+        OnPropertyChanged(nameof(IsTabSchedUnmatch));
+        OnPropertyChanged(nameof(IsTabSchedUnmatchI));
+        OnPropertyChanged(nameof(IsTabSchedUnmatchII));
+        OnPropertyChanged(nameof(IsTabRejectionData));
+        OnPropertyChanged(nameof(IsTabNilBank));
+    }
+
+    partial void OnRejSubTabChanged(string value) => OnPropertyChanged(nameof(IsRejSubTabInsert));
 }
 
-/// <summary>Helper class for the column mapping grid rows.</summary>
-public partial class ColumnMappingRow : ObservableObject
+/// <summary>Lightweight column mapping row for Transfer-to-SQL UI.</summary>
+public class ColumnMappingRow
 {
-    [ObservableProperty] private string sqlField = string.Empty;
-    [ObservableProperty] private string excelColumn = string.Empty;
+    public string SystemField { get; set; } = string.Empty;
+    public string ExcelField { get; set; } = string.Empty;
 }

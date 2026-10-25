@@ -21,6 +21,11 @@ public partial class BasisAllotmentViewModel : BaseViewModel
     [ObservableProperty] private bool exchangeApproved;
     [ObservableProperty] private bool isEditingRow;
 
+    // Manual Upload Tab
+    [ObservableProperty] private bool isManualUploadTab;
+    [ObservableProperty] private string manualFilePath = string.Empty;
+    [ObservableProperty] private int manualUploadedCount;
+
     // Edit panel fields
     [ObservableProperty] private string editCategory = string.Empty;
     [ObservableProperty] private int editSerial;
@@ -153,7 +158,7 @@ public partial class BasisAllotmentViewModel : BaseViewModel
         IsBusy = true;
         try
         {
-            LastExportPath = await _reportService.GenerateAllotteesReportAsync(IpoId, false);
+            LastExportPath = await _basisService.ExportBseFormatAsync(IpoId);
             await _alertService.ShowSuccessAsync("BSE Basis exported.", LastExportPath);
         }
         finally { IsBusy = false; }
@@ -165,28 +170,8 @@ public partial class BasisAllotmentViewModel : BaseViewModel
         IsBusy = true;
         try
         {
-            // NSE NetBAS format — similar to allottees but NSE-structured
-            var path = Path.Combine(FileSystem.AppDataDirectory, "Exports", $"IPO_{IpoId}",
-                $"NetBAS_NSE_{IpoId}_{DateTime.Now:yyyyMMddHHmm}.xlsx");
-            Directory.CreateDirectory(Path.GetDirectoryName(path)!);
-            using var wb = new ClosedXML.Excel.XLWorkbook();
-            var ws = wb.Worksheets.Add("NetBAS");
-            var rows = await _dbService.Connection.Table<BasisOfAllotment>()
-                .Where(b => b.IPO_ID == IpoId).ToListAsync();
-            ws.Cell(1, 1).Value = "Category"; ws.Cell(1, 2).Value = "Applns";
-            ws.Cell(1, 3).Value = "ShrApld"; ws.Cell(1, 4).Value = "ShrAlto";
-            ws.Cell(1, 5).Value = "Numerator"; ws.Cell(1, 6).Value = "Denomin";
-            int r = 2;
-            foreach (var row in rows)
-            {
-                ws.Cell(r, 1).Value = row.Category; ws.Cell(r, 2).Value = row.Applns;
-                ws.Cell(r, 3).Value = row.ShrApld;  ws.Cell(r, 4).Value = row.ShrAlto;
-                ws.Cell(r, 5).Value = row.Numerator; ws.Cell(r, 6).Value = row.Denomin;
-                r++;
-            }
-            wb.SaveAs(path);
-            LastExportPath = path;
-            await _alertService.ShowSuccessAsync("NSE NetBAS exported.", path);
+            LastExportPath = await _basisService.ExportNetBasNseAsync(IpoId);
+            await _alertService.ShowSuccessAsync("NSE NetBAS exported.", LastExportPath);
         }
         finally { IsBusy = false; }
     }
@@ -228,4 +213,140 @@ public partial class BasisAllotmentViewModel : BaseViewModel
         await _dbService.Connection.DeleteAsync(param);
         CategoryParams.Remove(param);
     }
+
+    [RelayCommand]
+    private void SwitchToAutoTab() => IsManualUploadTab = false;
+
+    [RelayCommand]
+    private void SwitchToManualTab() => IsManualUploadTab = true;
+
+    [RelayCommand]
+    private async Task BrowseManualFileAsync()
+    {
+        var result = await FilePicker.Default.PickAsync(new PickOptions
+        {
+            PickerTitle = "Select Manual Basis File (.xlsx / .csv)"
+        });
+        if (result != null)
+        {
+            ManualFilePath = result.FullPath;
+        }
+    }
+
+    [RelayCommand]
+    private async Task UploadManualBasisAsync()
+    {
+        if (string.IsNullOrWhiteSpace(ManualFilePath) || !File.Exists(ManualFilePath))
+        {
+            await _alertService.ShowAsync("File Required", "Please browse and select a valid .xlsx or .csv file first.");
+            return;
+        }
+
+        IsBusy = true;
+        try
+        {
+            var rowsToInsert = new List<BasisOfAllotment>();
+            string ext = Path.GetExtension(ManualFilePath).ToLowerInvariant();
+
+            if (ext == ".xlsx")
+            {
+                using var wb = new ClosedXML.Excel.XLWorkbook(ManualFilePath);
+                var ws = wb.Worksheet(1);
+                var lastRow = ws.LastRowUsed()?.RowNumber() ?? 0;
+                for (int r = 2; r <= lastRow; r++)
+                {
+                    string cat = ws.Cell(r, 1).GetString().Trim();
+                    if (string.IsNullOrEmpty(cat)) continue;
+
+                    int.TryParse(ws.Cell(r, 2).GetString(), out int serial);
+                    int.TryParse(ws.Cell(r, 3).GetString(), out int applns);
+                    decimal.TryParse(ws.Cell(r, 4).GetString(), out decimal shrApld);
+                    decimal.TryParse(ws.Cell(r, 5).GetString(), out decimal propAlloc);
+                    int.TryParse(ws.Cell(r, 6).GetString(), out int mlot);
+                    int.TryParse(ws.Cell(r, 7).GetString(), out int noAlto);
+                    decimal.TryParse(ws.Cell(r, 8).GetString(), out decimal shrAlto);
+                    int.TryParse(ws.Cell(r, 9).GetString(), out int num);
+                    int.TryParse(ws.Cell(r, 10).GetString(), out int denom);
+
+                    rowsToInsert.Add(new BasisOfAllotment
+                    {
+                        IPO_ID = IpoId,
+                        Category = cat,
+                        Serial = serial,
+                        Applns = applns,
+                        ShrApld = shrApld,
+                        PropAlloc = propAlloc,
+                        MLot = mlot,
+                        NoAlto = noAlto,
+                        ShrAlto = shrAlto,
+                        Numerator = num <= 0 ? 1 : num,
+                        Denomin = denom <= 0 ? 1 : denom,
+                        Excess = Math.Max(0, shrApld - shrAlto),
+                        AppPercent = applns > 0 ? (noAlto * 100m / applns) : 0,
+                        ShrPercent = shrApld > 0 ? (shrAlto * 100m / shrApld) : 0
+                    });
+                }
+            }
+            else
+            {
+                var lines = await File.ReadAllLinesAsync(ManualFilePath);
+                foreach (var line in lines.Skip(1))
+                {
+                    if (string.IsNullOrWhiteSpace(line)) continue;
+                    var parts = line.Split(new[] { ',', '\t', '|' });
+                    if (parts.Length < 4) continue;
+
+                    string cat = parts[0].Trim();
+                    int.TryParse(parts.Length > 1 ? parts[1] : "0", out int serial);
+                    int.TryParse(parts.Length > 2 ? parts[2] : "0", out int applns);
+                    decimal.TryParse(parts.Length > 3 ? parts[3] : "0", out decimal shrApld);
+                    decimal.TryParse(parts.Length > 4 ? parts[4] : "0", out decimal propAlloc);
+                    int.TryParse(parts.Length > 5 ? parts[5] : "0", out int mlot);
+                    int.TryParse(parts.Length > 6 ? parts[6] : "0", out int noAlto);
+                    decimal.TryParse(parts.Length > 7 ? parts[7] : "0", out decimal shrAlto);
+
+                    rowsToInsert.Add(new BasisOfAllotment
+                    {
+                        IPO_ID = IpoId,
+                        Category = cat,
+                        Serial = serial,
+                        Applns = applns,
+                        ShrApld = shrApld,
+                        PropAlloc = propAlloc,
+                        MLot = mlot,
+                        NoAlto = noAlto,
+                        ShrAlto = shrAlto,
+                        Numerator = 1,
+                        Denomin = 1,
+                        Excess = Math.Max(0, shrApld - shrAlto),
+                        AppPercent = applns > 0 ? (noAlto * 100m / applns) : 0,
+                        ShrPercent = shrApld > 0 ? (shrAlto * 100m / shrApld) : 0
+                    });
+                }
+            }
+
+            if (rowsToInsert.Count == 0)
+            {
+                await _alertService.ShowAsync("No Rows", "No valid basis rows could be read from the file.");
+                return;
+            }
+
+            // Remove existing basis for this IPO
+            var existing = await _dbService.Connection.Table<BasisOfAllotment>().Where(b => b.IPO_ID == IpoId).ToListAsync();
+            foreach (var e in existing) await _dbService.Connection.DeleteAsync(e);
+
+            await _dbService.Connection.InsertAllAsync(rowsToInsert);
+            ManualUploadedCount = rowsToInsert.Count;
+            StatusMessage = $"Successfully uploaded {ManualUploadedCount} manual basis rows.";
+            await _alertService.ShowSuccessAsync($"Uploaded {ManualUploadedCount} manual basis rows successfully.");
+            await LoadAsync();
+            IsManualUploadTab = false;
+        }
+        catch (Exception ex)
+        {
+            await _alertService.ShowErrorAsync($"Manual upload error: {ex.Message}");
+        }
+        finally { IsBusy = false; }
+    }
 }
+

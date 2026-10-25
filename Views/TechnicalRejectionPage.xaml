@@ -6,31 +6,38 @@
              x:Class="IPOProcessingSystem.Views.TechnicalRejectionPage"
              x:DataType="vm:TechnicalRejectionViewModel"
              Title="{Binding Title}">
-    <Grid RowDefinitions="Auto,*" Padding="16" RowSpacing="10">
+    <Grid RowDefinitions="Auto,Auto,*" Padding="16" RowSpacing="10">
+
         <!-- Top Toolbar & Filter Controls -->
         <VerticalStackLayout Grid.Row="0" Spacing="8">
             <Label Text="Technical Rejection Process" Style="{StaticResource SectionHeader}" />
-            
-            <!-- Rejection Actions Grid -->
+
+            <!-- Rejection Action Buttons -->
             <FlexLayout Direction="Row" Wrap="Wrap" AlignItems="Center">
-                <Button Text="Load Data" Command="{Binding LoadCommand}" Margin="4" />
-                <Button Text="Promoter PAN" Command="{Binding CheckPromoterPanCommand}" Margin="4" />
-                <Button Text="Revert Promoter" Command="{Binding RevertPromoterPanCommand}" Margin="4" />
-                <Button Text="SEBI Debarred" Command="{Binding CheckSebiDebarredCommand}" Margin="4" />
-                <Button Text="HNI Cut-off" Command="{Binding CheckHniCutOffCommand}" Margin="4" />
-                <Button Text="USA Applicant" Command="{Binding CheckUsaApplicantsCommand}" Margin="4" />
-                <Button Text="Duplicate PAN" Command="{Binding CheckDuplicatePanCommand}" Margin="4" />
-                <Button Text="Multiple PAN" Command="{Binding CheckMultiplePanCommand}" Margin="4" />
-                <Button Text="More Than One" Command="{Binding CheckMoreThanOneCommand}" Margin="4" />
-                <Button Text="Minor Detail" Command="{Binding CheckMinorDetailCommand}" Margin="4" />
-                <Button Text="PAN Mismatch" Command="{Binding CheckPanMismatchCommand}" Margin="4" />
-                <Button Text="Rejection Marking" Command="{Binding RunRejectionMarkingCommand}" BackgroundColor="Orange" Margin="4" />
-                <Button Text="Rejection Confirm" Command="{Binding RejectionConfirmCommand}" BackgroundColor="Crimson" Margin="4" />
-                <Button Text="Web Return" Command="{Binding GenerateWebReturnCommand}" Margin="4" />
-                <Button Text="Export Report" Command="{Binding GenerateReportCommand}" BackgroundColor="{StaticResource Primary}" Margin="4" />
+                <Button Text="Load Data"          Command="{Binding LoadCommand}"                  Margin="4" />
+                <Button Text="Promoter PAN"        Command="{Binding CheckPromoterPanCommand}"      Margin="4" />
+                <Button Text="Revert Promoter"     Command="{Binding RevertPromoterPanCommand}"     Margin="4" />
+                <Button Text="SEBI Debarred"       Command="{Binding CheckSebiDebarredCommand}"     Margin="4" />
+                <Button Text="HNI Cut-off"         Command="{Binding CheckHniCutOffCommand}"        Margin="4" />
+                <Button Text="USA Applicant"       Command="{Binding CheckUsaApplicantsCommand}"    Margin="4" />
+                <Button Text="Duplicate PAN"       Command="{Binding CheckDuplicatePanCommand}"     Margin="4" />
+                <Button Text="Multiple PAN"        Command="{Binding CheckMultiplePanCommand}"      Margin="4" />
+                <Button Text="More Than One"       Command="{Binding CheckMoreThanOneCommand}"      Margin="4" />
+                <Button Text="Minor Detail"        Command="{Binding CheckMinorDetailCommand}"      Margin="4" />
+                <Button Text="PAN Mismatch"        Command="{Binding CheckPanMismatchCommand}"      Margin="4" />
+                <Button Text="SELECT REJECTION"    Command="{Binding ToggleRejectionChecklistCommand}"
+                        BackgroundColor="#4A90D9"   Margin="4" />
+                <Button Text="MARKET MAKER"        Command="{Binding ToggleMarketMakerPanelCommand}"
+                        BackgroundColor="#7B5EA7"   Margin="4" />
+                <Button Text="BASIS CATEGORY"      Command="{Binding ToggleBasisCategoryPanelCommand}"
+                        BackgroundColor="#2E7D32"   Margin="4" />
+                <Button Text="Rejection Marking"   Command="{Binding RunRejectionMarkingCommand}"   BackgroundColor="Orange" Margin="4" />
+                <Button Text="Rejection Confirm"   Command="{Binding RejectionConfirmCommand}"      BackgroundColor="Crimson" Margin="4" />
+                <Button Text="Web Return"          Command="{Binding GenerateWebReturnCommand}"     Margin="4" />
+                <Button Text="Export Report"       Command="{Binding GenerateReportCommand}"        BackgroundColor="{StaticResource Primary}" Margin="4" />
             </FlexLayout>
 
-            <!-- Inputs for PAN and Cutoff filters -->
+            <!-- PAN / Cut-off inputs -->
             <Grid ColumnDefinitions="*,Auto,*,Auto" ColumnSpacing="8" RowDefinitions="Auto,Auto">
                 <VerticalStackLayout Grid.Row="0" Grid.Column="0">
                     <Label Text="Promoter PAN(s) (comma separated):" FontSize="11" />
@@ -39,7 +46,6 @@
                 <VerticalStackLayout Grid.Row="0" Grid.Column="1" VerticalOptions="End">
                     <Button Text="Check" Command="{Binding CheckPromoterPanCommand}" />
                 </VerticalStackLayout>
-
                 <VerticalStackLayout Grid.Row="0" Grid.Column="2">
                     <Label Text="SEBI Debarred PAN(s):" FontSize="11" />
                     <Entry Text="{Binding SebiDebarredPans}" Placeholder="e.g. PAN1,PAN2" />
@@ -47,10 +53,9 @@
                 <VerticalStackLayout Grid.Row="0" Grid.Column="3" VerticalOptions="End">
                     <Button Text="Check" Command="{Binding CheckSebiDebarredCommand}" />
                 </VerticalStackLayout>
-
                 <HorizontalStackLayout Grid.Row="1" Grid.ColumnSpan="4" Spacing="16" Margin="0,6,0,0">
                     <Label Text="HNI Cut-off Date &amp; Time:" VerticalOptions="Center" FontAttributes="Bold" />
-                    <DatePicker Date="{Binding HniCutOffDate}" WidthRequest="130" />
+                    <DatePicker Date="{Binding HniCutOffDate}" Format="dd/MM/yyyy" WidthRequest="130" />
                     <Entry Text="{Binding HniCutOffTime}" WidthRequest="80" Placeholder="15:00" />
                     <Button Text="Run HNI Cut-off" Command="{Binding CheckHniCutOffCommand}" />
                 </HorizontalStackLayout>
@@ -60,16 +65,136 @@
             <Label Text="{Binding StatusMessage}" TextColor="{StaticResource Accent}" FontAttributes="Bold" />
         </VerticalStackLayout>
 
+        <!-- ═══════ INLINE PANELS (Row 1) ═══════ -->
+        <Grid Grid.Row="1" RowDefinitions="Auto,Auto,Auto">
+
+            <!-- ── SELECT REJECTION Panel ── -->
+            <Border Grid.Row="0" IsVisible="{Binding ShowRejectionChecklist}"
+                    Stroke="#4A90D9" StrokeThickness="1" Padding="12" BackgroundColor="#F0F7FF" Margin="0,4">
+                <VerticalStackLayout Spacing="8">
+                    <Grid ColumnDefinitions="*,Auto,Auto,Auto">
+                        <Label Text="Rejection Checklist — Select applicable reason codes:" FontAttributes="Bold" VerticalOptions="Center" />
+                        <Button Grid.Column="1" Text="SELECT ALL" Command="{Binding SelectAllChecklistCommand}" Margin="4,0" />
+                        <Button Grid.Column="2" Text="SAVE" Command="{Binding SaveChecklistCommand}" BackgroundColor="{StaticResource Primary}" Margin="4,0" />
+                        <Button Grid.Column="3" Text="✕ Close" Command="{Binding ToggleRejectionChecklistCommand}" BackgroundColor="Gray" Margin="4,0" />
+                    </Grid>
+                    <CollectionView ItemsSource="{Binding ChecklistItems}" HeightRequest="160">
+                        <CollectionView.ItemsLayout>
+                            <LinearItemsLayout Orientation="Vertical" />
+                        </CollectionView.ItemsLayout>
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate x:DataType="models:RejectionChecklistItem">
+                                <Grid ColumnDefinitions="40,120,*" Padding="4">
+                                    <CheckBox IsChecked="{Binding Include}" VerticalOptions="Center" />
+                                    <Label Grid.Column="1" Text="{Binding MnemonicVar}" VerticalOptions="Center" FontAttributes="Bold" />
+                                    <Label Grid.Column="2" Text="{Binding ReasonText}" VerticalOptions="Center" />
+                                </Grid>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- ── MARKET MAKER Panel ── -->
+            <Border Grid.Row="1" IsVisible="{Binding ShowMarketMakerPanel}"
+                    Stroke="#7B5EA7" StrokeThickness="1" Padding="12" BackgroundColor="#F5F0FF" Margin="0,4">
+                <VerticalStackLayout Spacing="8">
+                    <Grid ColumnDefinitions="*,Auto,Auto,Auto,Auto">
+                        <Label Text="Market Maker Reclassification" FontAttributes="Bold" VerticalOptions="Center" />
+                        <Entry Grid.Column="1" Text="{Binding MarketMakerSearchName}" Placeholder="Name / Order No / PAN" WidthRequest="200" />
+                        <Button Grid.Column="2" Text="SEARCH" Command="{Binding SearchMarketMakerCommand}" Margin="4,0" />
+                        <Picker Grid.Column="3" ItemsSource="{Binding Categories}" SelectedItem="{Binding SelectedCategory}" WidthRequest="150" />
+                        <Button Grid.Column="4" Text="✕ Close" Command="{Binding ToggleMarketMakerPanelCommand}" BackgroundColor="Gray" Margin="4,0" />
+                    </Grid>
+                    <CollectionView ItemsSource="{Binding SearchResults}" SelectedItem="{Binding SelectedBid}" SelectionMode="Single" HeightRequest="130">
+                        <CollectionView.Header>
+                            <Grid ColumnDefinitions="80,120,130,120,*" Padding="4" BackgroundColor="{StaticResource Primary}">
+                                <Label Text="Order No"   TextColor="White" FontAttributes="Bold" />
+                                <Label Grid.Column="1" Text="Name"       TextColor="White" FontAttributes="Bold" />
+                                <Label Grid.Column="2" Text="PAN"        TextColor="White" FontAttributes="Bold" />
+                                <Label Grid.Column="3" Text="Category"   TextColor="White" FontAttributes="Bold" />
+                                <Label Grid.Column="4" Text="Bank"       TextColor="White" FontAttributes="Bold" />
+                            </Grid>
+                        </CollectionView.Header>
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate x:DataType="models:ApplnsxBid">
+                                <Grid ColumnDefinitions="80,120,130,120,*" Padding="4">
+                                    <Label Text="{Binding OrderNo}" />
+                                    <Label Grid.Column="1" Text="{Binding ClientName}" />
+                                    <Label Grid.Column="2" Text="{Binding PAN}" />
+                                    <Label Grid.Column="3" Text="{Binding Category}" />
+                                    <Label Grid.Column="4" Text="{Binding BankName}" />
+                                </Grid>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
+                    <HorizontalStackLayout Spacing="8">
+                        <Label Text="Reclassify selected to:" VerticalOptions="Center" />
+                        <Button Text="UPDATE" Command="{Binding UpdateMarketMakerCommand}" BackgroundColor="{StaticResource Primary}" />
+                    </HorizontalStackLayout>
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- ── BASIS CATEGORY Panel ── -->
+            <Border Grid.Row="2" IsVisible="{Binding ShowBasisCategoryPanel}"
+                    Stroke="#2E7D32" StrokeThickness="1" Padding="12" BackgroundColor="#F0FFF4" Margin="0,4">
+                <VerticalStackLayout Spacing="8">
+                    <Grid ColumnDefinitions="*,Auto,Auto">
+                        <Label Text="Basis Category Parameters" FontAttributes="Bold" VerticalOptions="Center" />
+                        <Button Grid.Column="1" Text="+ ADD" Command="{Binding ShowAddBasisCategoryCommand}" BackgroundColor="{StaticResource Primary}" Margin="4,0" />
+                        <Button Grid.Column="2" Text="✕ Close" Command="{Binding ToggleBasisCategoryPanelCommand}" BackgroundColor="Gray" Margin="4,0" />
+                    </Grid>
+                    <!-- Add form (visible when adding) -->
+                    <Grid ColumnDefinitions="*,*,*,*,*,Auto" ColumnSpacing="6"
+                          IsVisible="{Binding ShowAddBasisForm}">
+                        <Entry Placeholder="Category" Text="{Binding NewCategory}" />
+                        <Entry Grid.Column="1" Placeholder="PSize"  Text="{Binding NewPSize}"  Keyboard="Numeric" />
+                        <Entry Grid.Column="2" Placeholder="PSize1" Text="{Binding NewPSize1}" Keyboard="Numeric" />
+                        <Entry Grid.Column="3" Placeholder="Lot"    Text="{Binding NewLot}"    Keyboard="Numeric" />
+                        <Entry Grid.Column="4" Placeholder="LName"  Text="{Binding NewLName}" />
+                        <Button Grid.Column="5" Text="SAVE" Command="{Binding SaveNewBasisCategoryCommand}" BackgroundColor="ForestGreen" />
+                    </Grid>
+                    <CollectionView ItemsSource="{Binding BasisCategories}" HeightRequest="130">
+                        <CollectionView.Header>
+                            <Grid ColumnDefinitions="*,80,80,80,*,60" Padding="4" BackgroundColor="{StaticResource Primary}">
+                                <Label Text="Category"  TextColor="White" FontAttributes="Bold" />
+                                <Label Grid.Column="1" Text="PSize"  TextColor="White" FontAttributes="Bold" />
+                                <Label Grid.Column="2" Text="PSize1" TextColor="White" FontAttributes="Bold" />
+                                <Label Grid.Column="3" Text="Lot"    TextColor="White" FontAttributes="Bold" />
+                                <Label Grid.Column="4" Text="LName"  TextColor="White" FontAttributes="Bold" />
+                                <Label Grid.Column="5" Text="Del"    TextColor="White" FontAttributes="Bold" />
+                            </Grid>
+                        </CollectionView.Header>
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate x:DataType="models:BasisCategoryParameter">
+                                <Grid ColumnDefinitions="*,80,80,80,*,60" Padding="4">
+                                    <Label Text="{Binding Category}" />
+                                    <Label Grid.Column="1" Text="{Binding PSize}" />
+                                    <Label Grid.Column="2" Text="{Binding PSize1}" />
+                                    <Label Grid.Column="3" Text="{Binding Lot}" />
+                                    <Label Grid.Column="4" Text="{Binding LName}" />
+                                    <Button Grid.Column="5" Text="✕" BackgroundColor="Crimson" FontSize="11"
+                                            Command="{Binding Source={RelativeSource AncestorType={x:Type CollectionView}},
+                                                      Path=BindingContext.DeleteBasisCategoryCommand}"
+                                            CommandParameter="{Binding .}" />
+                                </Grid>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
+                </VerticalStackLayout>
+            </Border>
+        </Grid>
+
         <!-- Rejections Data Grid -->
-        <CollectionView Grid.Row="1" ItemsSource="{Binding Rejections}" SelectionMode="Single" SelectedItem="{Binding SelectedRejection}">
+        <CollectionView Grid.Row="2" ItemsSource="{Binding Rejections}" SelectionMode="Single" SelectedItem="{Binding SelectedRejection}">
             <CollectionView.Header>
                 <Grid ColumnDefinitions="80,110,120,130,120,*" Padding="6" BackgroundColor="{StaticResource Primary}">
-                    <Label Text="Rej ID" TextColor="White" FontAttributes="Bold" />
-                    <Label Grid.Column="1" Text="Form No" TextColor="White" FontAttributes="Bold" />
-                    <Label Grid.Column="2" Text="PAN" TextColor="White" FontAttributes="Bold" />
+                    <Label Text="Rej ID"      TextColor="White" FontAttributes="Bold" />
+                    <Label Grid.Column="1" Text="Form No"     TextColor="White" FontAttributes="Bold" />
+                    <Label Grid.Column="2" Text="PAN"         TextColor="White" FontAttributes="Bold" />
                     <Label Grid.Column="3" Text="Reason Code" TextColor="White" FontAttributes="Bold" />
-                    <Label Grid.Column="4" Text="Client ID" TextColor="White" FontAttributes="Bold" />
-                    <Label Grid.Column="5" Text="Remark" TextColor="White" FontAttributes="Bold" />
+                    <Label Grid.Column="4" Text="Client ID"   TextColor="White" FontAttributes="Bold" />
+                    <Label Grid.Column="5" Text="Remark"      TextColor="White" FontAttributes="Bold" />
                 </Grid>
             </CollectionView.Header>
             <CollectionView.ItemTemplate>

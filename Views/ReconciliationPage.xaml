@@ -6,104 +6,597 @@
              x:Class="IPOProcessingSystem.Views.ReconciliationPage"
              x:DataType="vm:ReconciliationViewModel"
              Title="{Binding Title}">
-    <Grid RowDefinitions="Auto,*" Padding="16" RowSpacing="10">
-        <!-- Header Controls -->
-        <VerticalStackLayout Grid.Row="0" Spacing="8">
+    <Grid RowDefinitions="Auto,Auto,*" Padding="12" RowSpacing="8">
+
+        <!-- ── Header Row ── -->
+        <VerticalStackLayout Grid.Row="0" Spacing="6">
             <Label Text="Bank Reconciliation (T+2)" Style="{StaticResource SectionHeader}" />
 
-            <!-- Top Toolbar -->
-            <Grid ColumnDefinitions="Auto,*,Auto,Auto" ColumnSpacing="10">
-                <Button Grid.Column="0" Text="Load Banks" Command="{Binding LoadBanksCommand}" />
-                <Entry Grid.Column="1" Text="{Binding SelectedBankCode}" Placeholder="Bank Code (e.g. AXIS, HDFC, SBI)" />
-                <Button Grid.Column="2" Text="Run Reconciliation" Command="{Binding RunReconciliationCommand}" BackgroundColor="{StaticResource Primary}" />
-                <Button Grid.Column="3" Text="Mark NIL Bank" Command="{Binding MarkBankNilCommand}" BackgroundColor="Crimson" />
-            </Grid>
-
-            <!-- File Upload Bar -->
-            <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
-                <Entry Grid.Column="0" Text="{Binding FilePath}" Placeholder="Bank schedule file (.xlsx / .csv)" IsReadOnly="True" />
-                <Button Grid.Column="1" Text="Browse" Command="{Binding BrowseCommand}" />
-                <Button Grid.Column="2" Text="Display Content" Command="{Binding DisplayContentCommand}" />
-            </Grid>
-
-            <!-- Summary KPI Badges -->
-            <HorizontalStackLayout Spacing="16" BackgroundColor="#F0F4F8" Padding="10">
-                <Label Text="{Binding TotalRecords, StringFormat='Total Records: {0}'}" FontAttributes="Bold" />
-                <Label Text="{Binding MatchedRecords, StringFormat='Matched: {0}'}" TextColor="ForestGreen" FontAttributes="Bold" />
-                <Label Text="{Binding UnmatchedRecords, StringFormat='Unmatched: {0}'}" TextColor="Crimson" FontAttributes="Bold" />
-                <Label Text="{Binding TotalAmount, StringFormat='Total Amt: ₹{0:N2}'}" FontAttributes="Bold" />
+            <!-- Recon Type toggle -->
+            <HorizontalStackLayout Spacing="16">
+                <Label Text="Recon Type:" VerticalOptions="Center" FontAttributes="Bold" />
+                <RadioButton Content="NON-ASBA" GroupName="ReconType"
+                             IsChecked="{Binding ReconType, Converter={StaticResource StringEqualsConverter}, ConverterParameter='NON-ASBA'}" />
+                <RadioButton Content="ASBA" GroupName="ReconType"
+                             IsChecked="{Binding ReconType, Converter={StaticResource StringEqualsConverter}, ConverterParameter='ASBA'}" />
+                <Label Text="{Binding ReconType, StringFormat='Mode: {0}'}"
+                       TextColor="{StaticResource Primary}" FontAttributes="Bold" VerticalOptions="Center" />
             </HorizontalStackLayout>
 
             <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" />
-            <Label Text="{Binding StatusMessage}" TextColor="{StaticResource Accent}" FontAttributes="Bold" />
+            <Label Text="{Binding StatusMessage}" TextColor="{StaticResource Accent}" FontAttributes="Bold"
+                   IsVisible="{Binding StatusMessage, Converter={StaticResource StringNotEmptyConverter}}" />
         </VerticalStackLayout>
 
-        <!-- Main Body: Tabs or Split Views -->
-        <Grid Grid.Row="1" ColumnDefinitions="*,*" ColumnSpacing="12">
-            <!-- Left Side: Unmatch & Rejections -->
-            <Border Grid.Column="0" Stroke="#CCCCCC" StrokeThickness="1" Padding="10">
-                <VerticalStackLayout Spacing="8">
-                    <Label Text="Unmatched Applications (Applnsx vs Schedule)" FontAttributes="Bold" />
-                    <CollectionView ItemsSource="{Binding ApplnsxUnmatch}" HeightRequest="260">
-                        <CollectionView.Header>
-                            <Grid ColumnDefinitions="80,100,*,Auto" Padding="4" BackgroundColor="{StaticResource Primary}">
-                                <Label Text="Form No" TextColor="White" FontAttributes="Bold" />
-                                <Label Grid.Column="1" Text="Amount" TextColor="White" FontAttributes="Bold" />
-                                <Label Grid.Column="2" Text="Reason" TextColor="White" FontAttributes="Bold" />
-                                <Label Grid.Column="3" Text="Action" TextColor="White" FontAttributes="Bold" />
-                            </Grid>
-                        </CollectionView.Header>
-                        <CollectionView.ItemTemplate>
-                            <DataTemplate x:DataType="models:UnmatchRecord">
-                                <Grid ColumnDefinitions="80,100,*,Auto" Padding="4">
-                                    <Label Text="{Binding FormNo}" />
-                                    <Label Grid.Column="1" Text="{Binding ExcelAmount, StringFormat='₹{0:N0}'}" />
-                                    <Label Grid.Column="2" Text="{Binding UnmatchType}" />
-                                    <Button Grid.Column="3" Text="Reject" BackgroundColor="Crimson"
-                                            Command="{Binding Source={RelativeSource AncestorType={x:Type vm:ReconciliationViewModel}}, Path=RejectUnmatchRecordCommand}"
-                                            CommandParameter="{Binding .}" />
-                                </Grid>
-                            </DataTemplate>
-                        </CollectionView.ItemTemplate>
-                    </CollectionView>
+        <!-- ── Tab Button Bar ── -->
+        <ScrollView Grid.Row="1" Orientation="Horizontal" HorizontalScrollBarVisibility="Never">
+            <HorizontalStackLayout Spacing="2" Padding="0,4">
+                <Button Text="VIEW EXCEL"       Command="{Binding SwitchTabCommand}" CommandParameter="ViewExcel"
+                        BackgroundColor="{Binding ActiveTab, Converter={StaticResource TabColorConverter}, ConverterParameter='ViewExcel'}" FontSize="11" Padding="10,6" />
+                <Button Text="TRANSFER TO SQL"  Command="{Binding SwitchTabCommand}" CommandParameter="TransferToSql"
+                        BackgroundColor="{Binding ActiveTab, Converter={StaticResource TabColorConverter}, ConverterParameter='TransferToSql'}" FontSize="11" Padding="10,6" />
+                <Button Text="CLEAN DATA SUMMARY" Command="{Binding SwitchTabCommand}" CommandParameter="CleanData"
+                        BackgroundColor="{Binding ActiveTab, Converter={StaticResource TabColorConverter}, ConverterParameter='CleanData'}" FontSize="11" Padding="10,6" />
+                <Button Text="APPLNSX UNMATCH" Command="{Binding SwitchTabCommand}" CommandParameter="ApplnsxUnmatch"
+                        BackgroundColor="{Binding ActiveTab, Converter={StaticResource TabColorConverter}, ConverterParameter='ApplnsxUnmatch'}" FontSize="11" Padding="10,6" />
+                <Button Text="APPLNSX MATCH"   Command="{Binding SwitchTabCommand}" CommandParameter="ApplnsxMatch"
+                        BackgroundColor="{Binding ActiveTab, Converter={StaticResource TabColorConverter}, ConverterParameter='ApplnsxMatch'}" FontSize="11" Padding="10,6" />
+                <Button Text="SCHED. UNMATCH"  Command="{Binding SwitchTabCommand}" CommandParameter="SchedUnmatch"
+                        BackgroundColor="{Binding ActiveTab, Converter={StaticResource TabColorConverter}, ConverterParameter='SchedUnmatch'}" FontSize="11" Padding="10,6" />
+                <Button Text="SCHED. UNMATCH I" Command="{Binding SwitchTabCommand}" CommandParameter="SchedUnmatchI"
+                        BackgroundColor="{Binding ActiveTab, Converter={StaticResource TabColorConverter}, ConverterParameter='SchedUnmatchI'}" FontSize="11" Padding="10,6" />
+                <Button Text="SCHED. UNMATCH II" Command="{Binding SwitchTabCommand}" CommandParameter="SchedUnmatchII"
+                        BackgroundColor="{Binding ActiveTab, Converter={StaticResource TabColorConverter}, ConverterParameter='SchedUnmatchII'}" FontSize="11" Padding="10,6" />
+                <Button Text="REJECTION DATA"  Command="{Binding SwitchTabCommand}" CommandParameter="RejectionData"
+                        BackgroundColor="{Binding ActiveTab, Converter={StaticResource TabColorConverter}, ConverterParameter='RejectionData'}" FontSize="11" Padding="10,6" />
+                <Button Text="NIL BANK"        Command="{Binding SwitchTabCommand}" CommandParameter="NilBank"
+                        BackgroundColor="{Binding ActiveTab, Converter={StaticResource TabColorConverter}, ConverterParameter='NilBank'}" FontSize="11" Padding="10,6" />
+            </HorizontalStackLayout>
+        </ScrollView>
 
-                    <!-- Search and Update -->
-                    <Label Text="Search &amp; Update Bank Code" FontAttributes="Bold" Margin="0,10,0,0" />
-                    <Grid ColumnDefinitions="*,Auto,*,Auto" ColumnSpacing="6">
-                        <Entry Grid.Column="0" Text="{Binding SearchFormNo}" Placeholder="Form / Order No" />
-                        <Button Grid.Column="1" Text="Search" Command="{Binding SearchCommand}" />
-                        <Entry Grid.Column="2" Text="{Binding UpdateBankCode}" Placeholder="New Bank Code" />
-                        <Button Grid.Column="3" Text="Update" Command="{Binding UpdateBankCodeCommand}" BackgroundColor="ForestGreen" />
+        <!-- ── Tab Content Area ── -->
+        <Grid Grid.Row="2">
+
+            <!-- ══ TAB 1: VIEW EXCEL ══ -->
+            <Grid IsVisible="{Binding IsTabViewExcel}" RowDefinitions="Auto,*" ColumnDefinitions="*,220" ColumnSpacing="12" RowSpacing="8">
+                <VerticalStackLayout Grid.Row="0" Grid.Column="0" Spacing="8">
+                    <Label Text="Select &amp; Preview Bank Schedule File" FontAttributes="Bold" />
+                    <Grid ColumnDefinitions="Auto,*,Auto,Auto,Auto,Auto" ColumnSpacing="8">
+                        <Label Grid.Column="0" Text="File Type:" VerticalOptions="Center" />
+                        <Picker Grid.Column="1" ItemsSource="{Binding FileTypes}" SelectedItem="{Binding SelectedFileType}" WidthRequest="110" />
+                        <Label Grid.Column="2" Text="Has Header:" VerticalOptions="Center" />
+                        <CheckBox Grid.Column="3" IsChecked="{Binding HasHeader}" />
+                        <Label Grid.Column="4" Text="Bank:" VerticalOptions="Center" />
+                        <Picker Grid.Column="5" ItemsSource="{Binding BankNames}" SelectedItem="{Binding SelectedBankCode}" WidthRequest="140" />
                     </Grid>
+                    <Grid ColumnDefinitions="*,Auto,Auto,Auto,Auto" ColumnSpacing="8">
+                        <Entry Grid.Column="0" Text="{Binding FilePath}" Placeholder="Bank schedule file path (.xlsx / .csv)" IsReadOnly="True" />
+                        <Button Grid.Column="1" Text="Browse ..." Command="{Binding BrowseCommand}" />
+                        <Button Grid.Column="2" Text="DISPLAY CONTENT" Command="{Binding DisplayContentCommand}" BackgroundColor="{StaticResource Primary}" />
+                        <Button Grid.Column="3" Text="CLEAR" Command="{Binding ClearFileCommand}" />
+                        <Button Grid.Column="4" Text="DELETE RECON" Command="{Binding DeleteReconCommand}" BackgroundColor="Crimson" />
+                    </Grid>
+                    <!-- Sheet selector (visible only for multi-sheet Excel) -->
+                    <HorizontalStackLayout Spacing="10" IsVisible="{Binding HasMultipleSheets}">
+                        <Label Text="Select Sheet:" VerticalOptions="Center" />
+                        <Picker ItemsSource="{Binding SheetNames}" SelectedItem="{Binding SelectedSheet}" WidthRequest="200" />
+                        <Button Text="Load Sheet" Command="{Binding LoadSheetCommand}" />
+                    </HorizontalStackLayout>
+                    <Label Text="{Binding FileRecordCount, StringFormat='Records: {0}'}" FontAttributes="Bold" />
                 </VerticalStackLayout>
-            </Border>
-
-            <!-- Right Side: Bank Reconciliation Status Lists -->
-            <Border Grid.Column="1" Stroke="#CCCCCC" StrokeThickness="1" Padding="10">
-                <Grid RowDefinitions="*,*" RowSpacing="10">
-                    <VerticalStackLayout Grid.Row="0">
+                <!-- Pending / Completed bank status lists -->
+                <Grid Grid.Row="0" Grid.Column="1" RowDefinitions="*,*" RowSpacing="8">
+                    <VerticalStackLayout Grid.Row="0" Spacing="4">
                         <Label Text="Pending Banks" FontAttributes="Bold" TextColor="DarkOrange" />
-                        <CollectionView ItemsSource="{Binding PendingBanks}">
+                        <CollectionView ItemsSource="{Binding PendingBanks}" HeightRequest="160">
                             <CollectionView.ItemTemplate>
                                 <DataTemplate x:DataType="x:String">
-                                    <Label Text="{Binding .}" Padding="6" />
+                                    <Label Text="{Binding .}" Padding="4" />
                                 </DataTemplate>
                             </CollectionView.ItemTemplate>
                         </CollectionView>
                     </VerticalStackLayout>
-
-                    <VerticalStackLayout Grid.Row="1">
+                    <VerticalStackLayout Grid.Row="1" Spacing="4">
                         <Label Text="Completed Banks" FontAttributes="Bold" TextColor="ForestGreen" />
-                        <CollectionView ItemsSource="{Binding CompletedBanks}">
+                        <CollectionView ItemsSource="{Binding CompletedBanks}" HeightRequest="160">
                             <CollectionView.ItemTemplate>
                                 <DataTemplate x:DataType="x:String">
-                                    <Label Text="{Binding .}" Padding="6" TextColor="ForestGreen" FontAttributes="Bold" />
+                                    <Label Text="{Binding .}" Padding="4" TextColor="ForestGreen" />
                                 </DataTemplate>
                             </CollectionView.ItemTemplate>
                         </CollectionView>
                     </VerticalStackLayout>
                 </Grid>
-            </Border>
+                <!-- Preview grid -->
+                <CollectionView Grid.Row="1" Grid.ColumnSpan="2" ItemsSource="{Binding PreviewRows}">
+                    <CollectionView.Header>
+                        <Grid ColumnDefinitions="80,80,90,90,80,70,110,110,80,90,90,100" Padding="4" BackgroundColor="{StaticResource Primary}">
+                            <Label Text="Symbol"       TextColor="White" FontAttributes="Bold" />
+                            <Label Grid.Column="1"  Text="Broker"        TextColor="White" FontAttributes="Bold" />
+                            <Label Grid.Column="2"  Text="DPID"          TextColor="White" FontAttributes="Bold" />
+                            <Label Grid.Column="3"  Text="Client ID"     TextColor="White" FontAttributes="Bold" />
+                            <Label Grid.Column="4"  Text="Bid Qty"       TextColor="White" FontAttributes="Bold" />
+                            <Label Grid.Column="5"  Text="Price"         TextColor="White" FontAttributes="Bold" />
+                            <Label Grid.Column="6"  Text="Amt Blocked"   TextColor="White" FontAttributes="Bold" />
+                            <Label Grid.Column="7"  Text="PAN"           TextColor="White" FontAttributes="Bold" />
+                            <Label Grid.Column="8"  Text="Category"      TextColor="White" FontAttributes="Bold" />
+                            <Label Grid.Column="9"  Text="Bank Code"     TextColor="White" FontAttributes="Bold" />
+                            <Label Grid.Column="10" Text="Location"      TextColor="White" FontAttributes="Bold" />
+                            <Label Grid.Column="11" Text="Entry Date"    TextColor="White" FontAttributes="Bold" />
+                        </Grid>
+                    </CollectionView.Header>
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate x:DataType="x:String">
+                            <Label Text="{Binding .}" Padding="4" FontSize="11" />
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+            </Grid>
+
+            <!-- ══ TAB 2: TRANSFER TO SQL ══ -->
+            <Grid IsVisible="{Binding IsTabTransferToSql}" RowDefinitions="Auto,*" RowSpacing="8">
+                <VerticalStackLayout Grid.Row="0" Spacing="8">
+                    <Label Text="Column Mapping — Map Excel columns to system APPLNSX fields" FontAttributes="Bold" />
+                    <HorizontalStackLayout Spacing="10">
+                        <Button Text="Load Mapping"         Command="{Binding LoadMappingCommand}" />
+                        <Button Text="Update/Insert Mapping" Command="{Binding SaveMappingCommand}" BackgroundColor="{StaticResource Primary}" />
+                        <Button Text="Clean Mapping"        Command="{Binding CleanMappingCommand}" BackgroundColor="DarkOrange" />
+                        <Button Text="FINISH (Commit to SQL)" Command="{Binding FinishImportCommand}" BackgroundColor="ForestGreen" />
+                    </HorizontalStackLayout>
+                    <Label Text="{Binding MappingStatus}" TextColor="{StaticResource Accent}" />
+                </VerticalStackLayout>
+                <!-- Two-column mapping grid -->
+                <Grid Grid.Row="1" ColumnDefinitions="*,*" ColumnSpacing="12">
+                    <VerticalStackLayout Grid.Column="0" Spacing="4">
+                        <Label Text="System APPLNSX Columns (Target)" FontAttributes="Bold" BackgroundColor="{StaticResource Primary}" TextColor="White" Padding="6" />
+                        <CollectionView ItemsSource="{Binding SystemColumns}" SelectionMode="Single" SelectedItem="{Binding SelectedSystemColumn}">
+                            <CollectionView.ItemTemplate>
+                                <DataTemplate x:DataType="x:String">
+                                    <Label Text="{Binding .}" Padding="6,3" BackgroundColor="White" />
+                                </DataTemplate>
+                            </CollectionView.ItemTemplate>
+                        </CollectionView>
+                    </VerticalStackLayout>
+                    <VerticalStackLayout Grid.Column="1" Spacing="4">
+                        <Label Text="Source Excel Columns" FontAttributes="Bold" BackgroundColor="#607D8B" TextColor="White" Padding="6" />
+                        <CollectionView ItemsSource="{Binding ExcelColumns}" SelectionMode="Single" SelectedItem="{Binding SelectedExcelColumn}">
+                            <CollectionView.ItemTemplate>
+                                <DataTemplate x:DataType="x:String">
+                                    <Label Text="{Binding .}" Padding="6,3" BackgroundColor="White" />
+                                </DataTemplate>
+                            </CollectionView.ItemTemplate>
+                        </CollectionView>
+                        <Button Text="↔ Map Selected Pair" Command="{Binding MapColumnPairCommand}"
+                                BackgroundColor="{StaticResource Accent}" />
+                    </VerticalStackLayout>
+                </Grid>
+            </Grid>
+
+            <!-- ══ TAB 3: CLEAN DATA SUMMARY ══ -->
+            <VerticalStackLayout IsVisible="{Binding IsTabCleanData}" Spacing="12">
+                <Label Text="Clean Data Summary — Bank file is always the source of truth" FontAttributes="Bold" />
+                <HorizontalStackLayout Spacing="10">
+                    <Button Text="AMOUNT UNMATCH CASES" Command="{Binding ShowAmountUnmatchCommand}" />
+                    <Button Text="SEARCH AND UPDATE"    Command="{Binding SearchAndUpdateCommand}" BackgroundColor="{StaticResource Primary}" />
+                    <Button Text="Refresh Summary"      Command="{Binding RefreshSummaryCommand}" />
+                </HorizontalStackLayout>
+
+                <!-- Search and Update Modal/Panel -->
+                <Border IsVisible="{Binding ShowSearchUpdatePanel}" Stroke="{StaticResource Primary}" StrokeThickness="2" Padding="12" BackgroundColor="#F0F7FF" Margin="0,4">
+                    <VerticalStackLayout Spacing="10">
+                        <Grid ColumnDefinitions="*,Auto,Auto,Auto" ColumnSpacing="8">
+                            <Label Text="SEARCH AND UPDATE — Reassign Bank Code" FontAttributes="Bold" FontSize="14" VerticalOptions="Center" />
+                            <Entry Grid.Column="1" Text="{Binding ReconSearchQuery}" Placeholder="Form No / Order No / PAN..." WidthRequest="220" />
+                            <Button Grid.Column="2" Text="Search" Command="{Binding ExecuteReconSearchCommand}" BackgroundColor="{StaticResource Primary}" />
+                            <Button Grid.Column="3" Text="Close" Command="{Binding HideSearchUpdatePanelCommand}" BackgroundColor="Crimson" />
+                        </Grid>
+
+                        <Grid ColumnDefinitions="3*,2*" ColumnSpacing="12">
+                            <!-- Left: Search Results -->
+                            <CollectionView ItemsSource="{Binding ReconSearchResults}" SelectedItem="{Binding SelectedReconBid}" SelectionMode="Single" HeightRequest="200">
+                                <CollectionView.Header>
+                                    <Grid ColumnDefinitions="90,120,90,80,70" Padding="4" BackgroundColor="{StaticResource Primary}">
+                                        <Label Text="Form No" TextColor="White" FontAttributes="Bold" />
+                                        <Label Grid.Column="1" Text="Name" TextColor="White" FontAttributes="Bold" />
+                                        <Label Grid.Column="2" Text="PAN" TextColor="White" FontAttributes="Bold" />
+                                        <Label Grid.Column="3" Text="Amount" TextColor="White" FontAttributes="Bold" />
+                                        <Label Grid.Column="4" Text="Bank" TextColor="White" FontAttributes="Bold" />
+                                    </Grid>
+                                </CollectionView.Header>
+                                <CollectionView.ItemTemplate>
+                                    <DataTemplate x:DataType="models:ApplnsxBid">
+                                        <Grid ColumnDefinitions="90,120,90,80,70" Padding="4">
+                                            <Label Text="{Binding FormNo}" />
+                                            <Label Grid.Column="1" Text="{Binding Name}" />
+                                            <Label Grid.Column="2" Text="{Binding PAN}" />
+                                            <Label Grid.Column="3" Text="{Binding Amount, StringFormat='₹{0:N0}'}" />
+                                            <Label Grid.Column="4" Text="{Binding BankCode}" FontAttributes="Bold" />
+                                        </Grid>
+                                    </DataTemplate>
+                                </CollectionView.ItemTemplate>
+                            </CollectionView>
+
+                            <!-- Right: Update Selected Record -->
+                            <Border Grid.Column="1" Stroke="#CCCCCC" StrokeThickness="1" Padding="12" BackgroundColor="White">
+                                <VerticalStackLayout Spacing="8">
+                                    <Label Text="Update Bank Code" FontAttributes="Bold" />
+                                    <Label Text="{Binding SelectedReconBid.FormNo, StringFormat='Form No: {0}'}" FontSize="12" />
+                                    <Label Text="{Binding SelectedReconBid.Name, StringFormat='Name: {0}'}" FontSize="12" />
+                                    <Label Text="{Binding SelectedReconBid.BankCode, StringFormat='Current Bank: {0}'}" FontSize="12" FontAttributes="Bold" TextColor="Crimson" />
+                                    <Label Text="New Bank Code:" FontSize="12" />
+                                    <Entry Text="{Binding NewBankCode}" Placeholder="e.g. HDFC, ICICI, SBI" />
+                                    <Button Text="UPDATE BANK CODE" Command="{Binding SaveReconBidUpdateCommand}" BackgroundColor="ForestGreen" />
+                                </VerticalStackLayout>
+                            </Border>
+                        </Grid>
+                    </VerticalStackLayout>
+                </Border>
+                <Grid ColumnDefinitions="*,*" ColumnSpacing="16">
+                    <!-- APPLNSX Side -->
+                    <Border Grid.Column="0" Stroke="{StaticResource Primary}" StrokeThickness="1" Padding="12" BackgroundColor="#F0F9FF">
+                        <VerticalStackLayout Spacing="6">
+                            <Label Text="APPLNSX Summary (Bank-Wise)" FontAttributes="Bold" TextColor="{StaticResource Primary}" />
+                            <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto" RowSpacing="4">
+                                <Label Text="Total Records:"        Grid.Row="0" Grid.Column="0" />
+                                <Label Text="{Binding ApplnsxTotalRecords}"   Grid.Row="0" Grid.Column="1" FontAttributes="Bold" />
+                                <Label Text="Total Amount:"         Grid.Row="1" Grid.Column="0" />
+                                <Label Text="{Binding ApplnsxTotalAmount, StringFormat='₹{0:N0}'}"    Grid.Row="1" Grid.Column="1" FontAttributes="Bold" />
+                                <Label Text="Matched Records:"      Grid.Row="2" Grid.Column="0" />
+                                <Label Text="{Binding ApplnsxMatchedRecords}" Grid.Row="2" Grid.Column="1" TextColor="ForestGreen" FontAttributes="Bold" />
+                                <Label Text="Matched Amount:"       Grid.Row="3" Grid.Column="0" />
+                                <Label Text="{Binding ApplnsxMatchedAmount, StringFormat='₹{0:N0}'}"  Grid.Row="3" Grid.Column="1" TextColor="ForestGreen" FontAttributes="Bold" />
+                                <Label Text="Unmatched Records:"    Grid.Row="4" Grid.Column="0" />
+                                <Label Text="{Binding ApplnsxUnmatchedRecords}" Grid.Row="4" Grid.Column="1" TextColor="Crimson" FontAttributes="Bold" />
+                                <Label Text="Unmatched Amount:"     Grid.Row="5" Grid.Column="0" />
+                                <Label Text="{Binding ApplnsxUnmatchedAmount, StringFormat='₹{0:N0}'}" Grid.Row="5" Grid.Column="1" TextColor="Crimson" FontAttributes="Bold" />
+                            </Grid>
+                        </VerticalStackLayout>
+                    </Border>
+                    <!-- Excel/Bank Side -->
+                    <Border Grid.Column="1" Stroke="#607D8B" StrokeThickness="1" Padding="12" BackgroundColor="#F5F5F5">
+                        <VerticalStackLayout Spacing="6">
+                            <Label Text="Excel (Bank File) Summary" FontAttributes="Bold" TextColor="#607D8B" />
+                            <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto" RowSpacing="4">
+                                <Label Text="Total Records:"        Grid.Row="0" Grid.Column="0" />
+                                <Label Text="{Binding ExcelTotalRecords}"    Grid.Row="0" Grid.Column="1" FontAttributes="Bold" />
+                                <Label Text="Total Amount:"         Grid.Row="1" Grid.Column="0" />
+                                <Label Text="{Binding ExcelTotalAmount, StringFormat='₹{0:N0}'}"     Grid.Row="1" Grid.Column="1" FontAttributes="Bold" />
+                                <Label Text="Matched Records:"      Grid.Row="2" Grid.Column="0" />
+                                <Label Text="{Binding ExcelMatchedRecords}"  Grid.Row="2" Grid.Column="1" TextColor="ForestGreen" FontAttributes="Bold" />
+                                <Label Text="Matched Amount:"       Grid.Row="3" Grid.Column="0" />
+                                <Label Text="{Binding ExcelMatchedAmount, StringFormat='₹{0:N0}'}"   Grid.Row="3" Grid.Column="1" TextColor="ForestGreen" FontAttributes="Bold" />
+                                <Label Text="Unmatched Records:"    Grid.Row="4" Grid.Column="0" />
+                                <Label Text="{Binding ExcelUnmatchedRecords}" Grid.Row="4" Grid.Column="1" TextColor="Crimson" FontAttributes="Bold" />
+                                <Label Text="Unmatched Amount:"     Grid.Row="5" Grid.Column="0" />
+                                <Label Text="{Binding ExcelUnmatchedAmount, StringFormat='₹{0:N0}'}"  Grid.Row="5" Grid.Column="1" TextColor="Crimson" FontAttributes="Bold" />
+                            </Grid>
+                        </VerticalStackLayout>
+                    </Border>
+                </Grid>
+                <!-- Reconciliation verdict -->
+                <Border Stroke="{Binding ReconMatchColor}" StrokeThickness="2" Padding="10" BackgroundColor="#FFFDE7">
+                    <Label Text="{Binding ReconVerdictText}" FontAttributes="Bold" FontSize="16"
+                           TextColor="{Binding ReconMatchColor}" HorizontalOptions="Center" />
+                </Border>
+            </VerticalStackLayout>
+
+            <!-- ══ TAB 4: APPLNSX UNMATCH CASE ══ -->
+            <VerticalStackLayout IsVisible="{Binding IsTabApplnsxUnmatch}" Spacing="8">
+                <Label Text="APPLNSX UNMATCH CASE — Records in APPLNSX not found in Bank file" FontAttributes="Bold" />
+                <Label Text="⚠ Before rejecting: verify via SEARCH AND UPDATE that the record exists with the SAME Bank Code."
+                       TextColor="DarkOrange" FontSize="12" />
+                <HorizontalStackLayout Spacing="10">
+                    <Label Text="{Binding ApplnsxUnmatch.Count, StringFormat='Total Records: {0}'}" VerticalOptions="Center" />
+                    <Button Text="Load Unmatch Records" Command="{Binding LoadApplnsxUnmatchCommand}" />
+                </HorizontalStackLayout>
+                <CollectionView ItemsSource="{Binding ApplnsxUnmatch}" SelectionMode="Single" SelectedItem="{Binding SelectedUnmatchRecord}">
+                    <CollectionView.Header>
+                        <Grid ColumnDefinitions="60,60,70,60,70,70,90,90,100,90,90,90,Auto" Padding="4" BackgroundColor="{StaticResource Primary}">
+                            <Label Text="Row_Id"    TextColor="White" FontAttributes="Bold" FontSize="10" />
+                            <Label Grid.Column="1"  Text="IPO_Id"    TextColor="White" FontAttributes="Bold" FontSize="10" />
+                            <Label Grid.Column="2"  Text="COCODE"    TextColor="White" FontAttributes="Bold" FontSize="10" />
+                            <Label Grid.Column="3"  Text="TRY"       TextColor="White" FontAttributes="Bold" FontSize="10" />
+                            <Label Grid.Column="4"  Text="LOT_NO"    TextColor="White" FontAttributes="Bold" FontSize="10" />
+                            <Label Grid.Column="5"  Text="BOOK_NO"   TextColor="White" FontAttributes="Bold" FontSize="10" />
+                            <Label Grid.Column="6"  Text="BANKCODE"  TextColor="White" FontAttributes="Bold" FontSize="10" />
+                            <Label Grid.Column="7"  Text="BRN_CODE"  TextColor="White" FontAttributes="Bold" FontSize="10" />
+                            <Label Grid.Column="8"  Text="FormNo"    TextColor="White" FontAttributes="Bold" FontSize="10" />
+                            <Label Grid.Column="9"  Text="SYN_MEM"   TextColor="White" FontAttributes="Bold" FontSize="10" />
+                            <Label Grid.Column="10" Text="BROK_CD"   TextColor="White" FontAttributes="Bold" FontSize="10" />
+                            <Label Grid.Column="11" Text="SUB_BROK"  TextColor="White" FontAttributes="Bold" FontSize="10" />
+                            <Label Grid.Column="12" Text="Action"    TextColor="White" FontAttributes="Bold" FontSize="10" />
+                        </Grid>
+                    </CollectionView.Header>
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate x:DataType="models:UnmatchRecord">
+                            <Grid ColumnDefinitions="60,60,70,60,70,70,90,90,100,90,90,90,Auto" Padding="4">
+                                <Label Text="{Binding FormNo}"    FontSize="10" />
+                                <Label Grid.Column="1"  Text="{Binding FormNo}"    FontSize="10" />
+                                <Label Grid.Column="2"  Text="{Binding UnmatchType}" FontSize="10" />
+                                <Label Grid.Column="3"  Text="-"    FontSize="10" />
+                                <Label Grid.Column="4"  Text="-"    FontSize="10" />
+                                <Label Grid.Column="5"  Text="-"    FontSize="10" />
+                                <Label Grid.Column="6"  Text="{Binding BankCode}"  FontSize="10" />
+                                <Label Grid.Column="7"  Text="-"    FontSize="10" />
+                                <Label Grid.Column="8"  Text="{Binding FormNo}"    FontSize="10" />
+                                <Label Grid.Column="9"  Text="-"    FontSize="10" />
+                                <Label Grid.Column="10" Text="-"    FontSize="10" />
+                                <Label Grid.Column="11" Text="-"    FontSize="10" />
+                                <Button Grid.Column="12" Text="Reject" BackgroundColor="Crimson" FontSize="10"
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type vm:ReconciliationViewModel}}, Path=RejectUnmatchRecordCommand}"
+                                        CommandParameter="{Binding .}" Padding="4,2" />
+                            </Grid>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+                <!-- Search and Update inline -->
+                <Label Text="Quick Search &amp; Update Bank Code" FontAttributes="Bold" Margin="0,8,0,0" />
+                <Grid ColumnDefinitions="*,Auto,*,Auto" ColumnSpacing="6">
+                    <Entry Grid.Column="0" Text="{Binding SearchFormNo}" Placeholder="Form / Order No" />
+                    <Button Grid.Column="1" Text="Search" Command="{Binding SearchCommand}" />
+                    <Entry Grid.Column="2" Text="{Binding UpdateBankCode}" Placeholder="Correct Bank Code" />
+                    <Button Grid.Column="3" Text="UPDATE" Command="{Binding UpdateBankCodeCommand}" BackgroundColor="ForestGreen" />
+                </Grid>
+            </VerticalStackLayout>
+
+            <!-- ══ TAB 5: APPLNSX MATCH CASE ══ -->
+            <VerticalStackLayout IsVisible="{Binding IsTabApplnsxMatch}" Spacing="8">
+                <Label Text="APPLNSX MATCH CASE — Records that matched with Bank file" FontAttributes="Bold" />
+                <Button Text="Load Matched Records" Command="{Binding LoadMatchedRecordsCommand}" HorizontalOptions="Start" />
+                <CollectionView ItemsSource="{Binding ApplnsxMatch}">
+                    <CollectionView.Header>
+                        <Grid ColumnDefinitions="100,100,120,120,80,*" Padding="4" BackgroundColor="ForestGreen">
+                            <Label Text="FormNo"    TextColor="White" FontAttributes="Bold" />
+                            <Label Grid.Column="1" Text="OrderNo"   TextColor="White" FontAttributes="Bold" />
+                            <Label Grid.Column="2" Text="BankCode"  TextColor="White" FontAttributes="Bold" />
+                            <Label Grid.Column="3" Text="PAN"       TextColor="White" FontAttributes="Bold" />
+                            <Label Grid.Column="4" Text="Amount"    TextColor="White" FontAttributes="Bold" />
+                            <Label Grid.Column="5" Text="Name"      TextColor="White" FontAttributes="Bold" />
+                        </Grid>
+                    </CollectionView.Header>
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate x:DataType="models:ApplnsxBid">
+                            <Grid ColumnDefinitions="100,100,120,120,80,*" Padding="4">
+                                <Label Text="{Binding FormNo}"    FontSize="11" />
+                                <Label Grid.Column="1" Text="{Binding OrderNo}"   FontSize="11" />
+                                <Label Grid.Column="2" Text="{Binding BankCode}"  FontSize="11" />
+                                <Label Grid.Column="3" Text="{Binding PAN}"       FontSize="11" />
+                                <Label Grid.Column="4" Text="{Binding Amount, StringFormat='₹{0:N0}'}" FontSize="11" />
+                                <Label Grid.Column="5" Text="{Binding Name}"      FontSize="11" />
+                            </Grid>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+            </VerticalStackLayout>
+
+            <!-- ══ TAB 6: SCHEDULE UNMATCH CASE ══ -->
+            <VerticalStackLayout IsVisible="{Binding IsTabSchedUnmatch}" Spacing="8">
+                <Label Text="SCHEDULE UNMATCH CASE — Applications in APPLNSX filed under a different bank code" FontAttributes="Bold" />
+                <Label Text="ℹ This tab is read-only. Use SEARCH AND UPDATE to fix bank code mismatches." TextColor="#607D8B" FontSize="12" />
+                <Button Text="Load Schedule Unmatch" Command="{Binding LoadSchedUnmatchCommand}" HorizontalOptions="Start" />
+                <CollectionView ItemsSource="{Binding ScheduleUnmatch}">
+                    <CollectionView.Header>
+                        <Grid ColumnDefinitions="60,90,120,100,120,80,100,110,90,90,*" Padding="4" BackgroundColor="#607D8B">
+                            <Label Text="IPO_id"   TextColor="White" FontAttributes="Bold" FontSize="10" />
+                            <Label Grid.Column="1"  Text="BANKCODE"  TextColor="White" FontAttributes="Bold" FontSize="10" />
+                            <Label Grid.Column="2"  Text="BANKNAME"  TextColor="White" FontAttributes="Bold" FontSize="10" />
+                            <Label Grid.Column="3"  Text="FormNo"    TextColor="White" FontAttributes="Bold" FontSize="10" />
+                            <Label Grid.Column="4"  Text="NAME"      TextColor="White" FontAttributes="Bold" FontSize="10" />
+                            <Label Grid.Column="5"  Text="Debent"    TextColor="White" FontAttributes="Bold" FontSize="10" />
+                            <Label Grid.Column="6"  Text="AMOUNT"    TextColor="White" FontAttributes="Bold" FontSize="10" />
+                            <Label Grid.Column="7"  Text="PAN"       TextColor="White" FontAttributes="Bold" FontSize="10" />
+                            <Label Grid.Column="8"  Text="CLID"      TextColor="White" FontAttributes="Bold" FontSize="10" />
+                            <Label Grid.Column="9"  Text="ACNO"      TextColor="White" FontAttributes="Bold" FontSize="10" />
+                            <Label Grid.Column="10" Text="REMARK"    TextColor="White" FontAttributes="Bold" FontSize="10" />
+                        </Grid>
+                    </CollectionView.Header>
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate x:DataType="models:ApplnsxBid">
+                            <Grid ColumnDefinitions="60,90,120,100,120,80,100,110,90,90,*" Padding="4">
+                                <Label Text="{Binding IPO_ID}"   FontSize="10" />
+                                <Label Grid.Column="1"  Text="{Binding BankCode}"  FontSize="10" />
+                                <Label Grid.Column="2"  Text="{Binding BankName}"  FontSize="10" />
+                                <Label Grid.Column="3"  Text="{Binding FormNo}"    FontSize="10" />
+                                <Label Grid.Column="4"  Text="{Binding Name}"      FontSize="10" />
+                                <Label Grid.Column="5"  Text="{Binding Quantity}"  FontSize="10" />
+                                <Label Grid.Column="6"  Text="{Binding Amount, StringFormat='₹{0:N0}'}" FontSize="10" />
+                                <Label Grid.Column="7"  Text="{Binding PAN}"       FontSize="10" />
+                                <Label Grid.Column="8"  Text="{Binding CLID}"      FontSize="10" />
+                                <Label Grid.Column="9"  Text="{Binding AccountNo}" FontSize="10" />
+                                <Label Grid.Column="10" Text="{Binding Remark}"    FontSize="10" />
+                            </Grid>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+            </VerticalStackLayout>
+
+            <!-- ══ TAB 7: SCHEDULE UNMATCH CASE - I ══ -->
+            <VerticalStackLayout IsVisible="{Binding IsTabSchedUnmatchI}" Spacing="8">
+                <Label Text="SCHEDULE UNMATCH CASE - I — Applications in APPLNSX registered under another bank" FontAttributes="Bold" />
+                <Label Text="In this Tab You can only view the information. Fix via SEARCH AND UPDATE." TextColor="#607D8B" FontSize="12" />
+                <Button Text="Load Data" Command="{Binding LoadSchedUnmatchICommand}" HorizontalOptions="Start" />
+                <CollectionView ItemsSource="{Binding ScheduleUnmatchI}">
+                    <CollectionView.Header>
+                        <Grid ColumnDefinitions="60,90,120,100,120,80,100,110" Padding="4" BackgroundColor="#455A64">
+                            <Label Text="IPO_id"    TextColor="White" FontAttributes="Bold" FontSize="10" />
+                            <Label Grid.Column="1" Text="BANKCODE"   TextColor="White" FontAttributes="Bold" FontSize="10" />
+                            <Label Grid.Column="2" Text="BANKNAME"   TextColor="White" FontAttributes="Bold" FontSize="10" />
+                            <Label Grid.Column="3" Text="FormNo"     TextColor="White" FontAttributes="Bold" FontSize="10" />
+                            <Label Grid.Column="4" Text="NAME"       TextColor="White" FontAttributes="Bold" FontSize="10" />
+                            <Label Grid.Column="5" Text="Debent"     TextColor="White" FontAttributes="Bold" FontSize="10" />
+                            <Label Grid.Column="6" Text="AMOUNT"     TextColor="White" FontAttributes="Bold" FontSize="10" />
+                            <Label Grid.Column="7" Text="PAN"        TextColor="White" FontAttributes="Bold" FontSize="10" />
+                        </Grid>
+                    </CollectionView.Header>
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate x:DataType="models:ApplnsxBid">
+                            <Grid ColumnDefinitions="60,90,120,100,120,80,100,110" Padding="4">
+                                <Label Text="{Binding IPO_ID}"   FontSize="10" />
+                                <Label Grid.Column="1" Text="{Binding BankCode}"  FontSize="10" />
+                                <Label Grid.Column="2" Text="{Binding BankName}"  FontSize="10" />
+                                <Label Grid.Column="3" Text="{Binding FormNo}"    FontSize="10" />
+                                <Label Grid.Column="4" Text="{Binding Name}"      FontSize="10" />
+                                <Label Grid.Column="5" Text="{Binding Quantity}"  FontSize="10" />
+                                <Label Grid.Column="6" Text="{Binding Amount, StringFormat='₹{0:N0}'}" FontSize="10" />
+                                <Label Grid.Column="7" Text="{Binding PAN}"       FontSize="10" />
+                            </Grid>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+            </VerticalStackLayout>
+
+            <!-- ══ TAB 8: SCHEDULE UNMATCH CASE - II ══ -->
+            <VerticalStackLayout IsVisible="{Binding IsTabSchedUnmatchII}" Spacing="8">
+                <Label Text="SCHEDULE UNMATCH CASE - II — Secondary diagnostic view for further cross-bank mismatches" FontAttributes="Bold" />
+                <Label Text="In this Tab You can only view the information." TextColor="#607D8B" FontSize="12" />
+                <Button Text="Load Data" Command="{Binding LoadSchedUnmatchIICommand}" HorizontalOptions="Start" />
+                <CollectionView ItemsSource="{Binding ScheduleUnmatchII}">
+                    <CollectionView.Header>
+                        <Grid ColumnDefinitions="60,90,120,100,120,80,100,110" Padding="4" BackgroundColor="#37474F">
+                            <Label Text="IPO_id"    TextColor="White" FontAttributes="Bold" FontSize="10" />
+                            <Label Grid.Column="1" Text="BANKCODE"   TextColor="White" FontAttributes="Bold" FontSize="10" />
+                            <Label Grid.Column="2" Text="BANKNAME"   TextColor="White" FontAttributes="Bold" FontSize="10" />
+                            <Label Grid.Column="3" Text="FormNo"     TextColor="White" FontAttributes="Bold" FontSize="10" />
+                            <Label Grid.Column="4" Text="NAME"       TextColor="White" FontAttributes="Bold" FontSize="10" />
+                            <Label Grid.Column="5" Text="Debent"     TextColor="White" FontAttributes="Bold" FontSize="10" />
+                            <Label Grid.Column="6" Text="AMOUNT"     TextColor="White" FontAttributes="Bold" FontSize="10" />
+                            <Label Grid.Column="7" Text="PAN"        TextColor="White" FontAttributes="Bold" FontSize="10" />
+                        </Grid>
+                    </CollectionView.Header>
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate x:DataType="models:ApplnsxBid">
+                            <Grid ColumnDefinitions="60,90,120,100,120,80,100,110" Padding="4">
+                                <Label Text="{Binding IPO_ID}"   FontSize="10" />
+                                <Label Grid.Column="1" Text="{Binding BankCode}"  FontSize="10" />
+                                <Label Grid.Column="2" Text="{Binding BankName}"  FontSize="10" />
+                                <Label Grid.Column="3" Text="{Binding FormNo}"    FontSize="10" />
+                                <Label Grid.Column="4" Text="{Binding Name}"      FontSize="10" />
+                                <Label Grid.Column="5" Text="{Binding Quantity}"  FontSize="10" />
+                                <Label Grid.Column="6" Text="{Binding Amount, StringFormat='₹{0:N0}'}" FontSize="10" />
+                                <Label Grid.Column="7" Text="{Binding PAN}"       FontSize="10" />
+                            </Grid>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+            </VerticalStackLayout>
+
+            <!-- ══ TAB 9: REJECTION DATA ══ -->
+            <Grid IsVisible="{Binding IsTabRejectionData}" RowDefinitions="Auto,*" RowSpacing="8">
+                <VerticalStackLayout Grid.Row="0" Spacing="8">
+                    <Label Text="Rejection Data — Manage Rejected Applications" FontAttributes="Bold" />
+                    <!-- Sub-tab buttons -->
+                    <HorizontalStackLayout Spacing="4">
+                        <Button Text="UPDATE REJECTION DATA"
+                                Command="{Binding SwitchRejSubTabCommand}" CommandParameter="Update"
+                                BackgroundColor="{Binding RejSubTab, Converter={StaticResource TabColorConverter}, ConverterParameter='Update'}"
+                                FontSize="11" />
+                        <Button Text="INSERT INTO APPLNSX"
+                                Command="{Binding SwitchRejSubTabCommand}" CommandParameter="Insert"
+                                BackgroundColor="{Binding RejSubTab, Converter={StaticResource TabColorConverter}, ConverterParameter='Insert'}"
+                                FontSize="11" />
+                    </HorizontalStackLayout>
+                    <HorizontalStackLayout Spacing="10">
+                        <Entry Text="{Binding RejSearchFormNo}" Placeholder="Search Form No" WidthRequest="180" />
+                        <Picker ItemsSource="{Binding BankNames}" SelectedItem="{Binding RejFilterBankCode}"
+                                Title="Select Bank" WidthRequest="160" />
+                        <Label Text="{Binding RejectedRecords.Count, StringFormat='Total Count: {0}'}" VerticalOptions="Center" />
+                        <Button Text="LOAD" Command="{Binding LoadRejectionDataCommand}" />
+                        <Button Text="INSERT INTO APPLNSX" Command="{Binding InsertIntoApplnsxCommand}"
+                                BackgroundColor="ForestGreen" IsVisible="{Binding IsRejSubTabInsert}" />
+                    </HorizontalStackLayout>
+                </VerticalStackLayout>
+                <CollectionView Grid.Row="1" ItemsSource="{Binding RejectedRecords}" SelectionMode="Multiple">
+                    <CollectionView.Header>
+                        <Grid ColumnDefinitions="30,60,90,120,120,80,110,110,90,90,*" Padding="4" BackgroundColor="Crimson">
+                            <Label Text="✓"        TextColor="White" FontAttributes="Bold" FontSize="10" />
+                            <Label Grid.Column="1"  Text="IPO_id"    TextColor="White" FontAttributes="Bold" FontSize="10" />
+                            <Label Grid.Column="2"  Text="FormNo"    TextColor="White" FontAttributes="Bold" FontSize="10" />
+                            <Label Grid.Column="3"  Text="BANKCODE"  TextColor="White" FontAttributes="Bold" FontSize="10" />
+                            <Label Grid.Column="4"  Text="NAME"      TextColor="White" FontAttributes="Bold" FontSize="10" />
+                            <Label Grid.Column="5"  Text="Debent"    TextColor="White" FontAttributes="Bold" FontSize="10" />
+                            <Label Grid.Column="6"  Text="AMOUNT"    TextColor="White" FontAttributes="Bold" FontSize="10" />
+                            <Label Grid.Column="7"  Text="PAN"       TextColor="White" FontAttributes="Bold" FontSize="10" />
+                            <Label Grid.Column="8"  Text="CLID"      TextColor="White" FontAttributes="Bold" FontSize="10" />
+                            <Label Grid.Column="9"  Text="ACNO"      TextColor="White" FontAttributes="Bold" FontSize="10" />
+                            <Label Grid.Column="10" Text="REMARK"    TextColor="White" FontAttributes="Bold" FontSize="10" />
+                        </Grid>
+                    </CollectionView.Header>
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate x:DataType="models:RejectionRecord">
+                            <Grid ColumnDefinitions="30,60,90,120,120,80,110,110,90,90,*" Padding="4">
+                                <CheckBox Grid.Column="0" IsChecked="{Binding IsSelected}" />
+                                <Label Grid.Column="1"  Text="{Binding IPO_Id}"  FontSize="10" />
+                                <Label Grid.Column="2"  Text="{Binding FormNo}"  FontSize="10" />
+                                <Label Grid.Column="3"  Text="{Binding BankCode}" FontSize="10" />
+                                <Label Grid.Column="4"  Text="{Binding Name}"    FontSize="10" />
+                                <Label Grid.Column="5"  Text="{Binding Debent}"  FontSize="10" />
+                                <Label Grid.Column="6"  Text="{Binding Amount, StringFormat='₹{0:N0}'}" FontSize="10" />
+                                <Label Grid.Column="7"  Text="{Binding PAN}"     FontSize="10" />
+                                <Label Grid.Column="8"  Text="{Binding CLID}"    FontSize="10" />
+                                <Label Grid.Column="9"  Text="{Binding ACNO}"    FontSize="10" />
+                                <Label Grid.Column="10" Text="{Binding Remark}"  FontSize="10" />
+                            </Grid>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+            </Grid>
+
+            <!-- ══ TAB 10: NIL BANK ══ -->
+            <VerticalStackLayout IsVisible="{Binding IsTabNilBank}" Spacing="10">
+                <Label Text="NIL BANK — Mark banks with zero records as Nil" FontAttributes="Bold" />
+                <Label Text="A bank marked Nil drops off the active reconciliation bank list." TextColor="#607D8B" FontSize="12" />
+                <HorizontalStackLayout Spacing="12">
+                    <Label Text="Select Bank:" VerticalOptions="Center" />
+                    <Picker ItemsSource="{Binding BankNames}" SelectedItem="{Binding NilBankCode}" WidthRequest="180" />
+                    <RadioButton Content="BANK ASBA" GroupName="NilAsbaGrp"
+                                 IsChecked="{Binding NilAsbaType, Converter={StaticResource StringEqualsConverter}, ConverterParameter='BANK'}" />
+                    <RadioButton Content="MEMBER ASBA" GroupName="NilAsbaGrp"
+                                 IsChecked="{Binding NilAsbaType, Converter={StaticResource StringEqualsConverter}, ConverterParameter='MEMBER'}" />
+                </HorizontalStackLayout>
+                <HorizontalStackLayout Spacing="10">
+                    <Button Text="Show Bank Details"     Command="{Binding ShowNilBankDetailsCommand}" />
+                    <Button Text="NIL UPDATE TO APPLNSX" Command="{Binding MarkBankNilCommand}"
+                            BackgroundColor="Crimson" />
+                </HorizontalStackLayout>
+                <Label Text="{Binding NilBankRecordCount, StringFormat='RECORDS: {0}'}" FontAttributes="Bold" />
+                <CollectionView ItemsSource="{Binding NilBankRows}">
+                    <CollectionView.Header>
+                        <Grid ColumnDefinitions="70,60,70,60,70,70,90,90,110,90,90,90" Padding="4" BackgroundColor="DarkSlateGray">
+                            <Label Text="ROW_Id"    TextColor="White" FontAttributes="Bold" FontSize="10" />
+                            <Label Grid.Column="1"  Text="IPO_Id"    TextColor="White" FontAttributes="Bold" FontSize="10" />
+                            <Label Grid.Column="2"  Text="COCODE"    TextColor="White" FontAttributes="Bold" FontSize="10" />
+                            <Label Grid.Column="3"  Text="TRY"       TextColor="White" FontAttributes="Bold" FontSize="10" />
+                            <Label Grid.Column="4"  Text="LOT_NO"    TextColor="White" FontAttributes="Bold" FontSize="10" />
+                            <Label Grid.Column="5"  Text="BOOK_NO"   TextColor="White" FontAttributes="Bold" FontSize="10" />
+                            <Label Grid.Column="6"  Text="BANKCODE"  TextColor="White" FontAttributes="Bold" FontSize="10" />
+                            <Label Grid.Column="7"  Text="BRN_CODE"  TextColor="White" FontAttributes="Bold" FontSize="10" />
+                            <Label Grid.Column="8"  Text="FormN"     TextColor="White" FontAttributes="Bold" FontSize="10" />
+                            <Label Grid.Column="9"  Text="SYN_MEM"   TextColor="White" FontAttributes="Bold" FontSize="10" />
+                            <Label Grid.Column="10" Text="BROK_CD"   TextColor="White" FontAttributes="Bold" FontSize="10" />
+                            <Label Grid.Column="11" Text="SUB_BROK"  TextColor="White" FontAttributes="Bold" FontSize="10" />
+                        </Grid>
+                    </CollectionView.Header>
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate x:DataType="models:ApplnsxBid">
+                            <Grid ColumnDefinitions="70,60,70,60,70,70,90,90,110,90,90,90" Padding="4">
+                                <Label Text="{Binding RowId}"      FontSize="10" />
+                                <Label Grid.Column="1"  Text="{Binding IPO_ID}"   FontSize="10" />
+                                <Label Grid.Column="2"  Text="-"    FontSize="10" />
+                                <Label Grid.Column="3"  Text="-"    FontSize="10" />
+                                <Label Grid.Column="4"  Text="-"    FontSize="10" />
+                                <Label Grid.Column="5"  Text="-"    FontSize="10" />
+                                <Label Grid.Column="6"  Text="{Binding BankCode}"  FontSize="10" />
+                                <Label Grid.Column="7"  Text="{Binding BranchCode}" FontSize="10" />
+                                <Label Grid.Column="8"  Text="{Binding FormNo}"    FontSize="10" />
+                                <Label Grid.Column="9"  Text="{Binding SynMem}"    FontSize="10" />
+                                <Label Grid.Column="10" Text="{Binding BrokerCode}" FontSize="10" />
+                                <Label Grid.Column="11" Text="{Binding SubBroker}"  FontSize="10" />
+                            </Grid>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+            </VerticalStackLayout>
+
         </Grid>
     </Grid>
 </ContentPage>

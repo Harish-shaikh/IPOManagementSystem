@@ -63,6 +63,60 @@
                 </VerticalStackLayout>
             </Border>
 
+            <!-- ═══════════════════════════════════════════════════════════
+                 SECTION: EMAIL TO BANKS & ZIP FILE
+                 ═══════════════════════════════════════════════════════════ -->
+            <Border Stroke="#D62828" StrokeThickness="1" Padding="12" BackgroundColor="#FDFDFD">
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="Email to Banks &amp; Day Wise Export" FontAttributes="Bold" FontSize="13" />
+
+                    <!-- Select Day -->
+                    <HorizontalStackLayout Spacing="12">
+                        <Label Text="Select Day:" VerticalOptions="Center" />
+                        <Picker ItemsSource="{Binding DayOptions}" SelectedItem="{Binding SelectedDay}"
+                                WidthRequest="160" />
+                    </HorizontalStackLayout>
+
+                    <!-- Select All -->
+                    <HorizontalStackLayout Spacing="8">
+                        <CheckBox IsChecked="{Binding SelectAllBanks}" />
+                        <Label Text="Select All Banks" VerticalOptions="Center" FontAttributes="Bold" />
+                    </HorizontalStackLayout>
+
+                    <!-- Bank Checklist -->
+                    <CollectionView ItemsSource="{Binding Banks}" HeightRequest="160"
+                                    BackgroundColor="#F7F7F7">
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate x:DataType="models:BankSelectionItem">
+                                <HorizontalStackLayout Spacing="8" Padding="4,2">
+                                    <CheckBox IsChecked="{Binding IsSelected}" />
+                                    <Label VerticalOptions="Center">
+                                        <Label.Text>
+                                            <MultiBinding StringFormat="{}{0}  —  {1}">
+                                                <Binding Path="BankCode" />
+                                                <Binding Path="BankName" />
+                                            </MultiBinding>
+                                        </Label.Text>
+                                    </Label>
+                                </HorizontalStackLayout>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
+
+                    <!-- Action Buttons -->
+                    <FlexLayout Direction="Row" Wrap="Wrap" AlignItems="Center">
+                        <Button Text="DAY WISE DATA" Command="{Binding GenerateDayWiseDataCommand}"
+                                BackgroundColor="{StaticResource Primary}" TextColor="White" Margin="4" />
+                        <Button Text="ZIP FILE" Command="{Binding ZipFileCommand}"
+                                BackgroundColor="#2E7D32" TextColor="White" Margin="4" />
+                        <Button Text="EMAIL TO BANKS" Command="{Binding EmailToBanksCommand}"
+                                BackgroundColor="#D62828" TextColor="White" Margin="4" />
+                        <Button Text="REPORT MAIL" Command="{Binding ReportMailCommand}"
+                                BackgroundColor="Gray" TextColor="White" Margin="4" />
+                    </FlexLayout>
+                </VerticalStackLayout>
+            </Border>
+
             <!-- Status Indicator -->
             <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" />
             <Label Text="{Binding StatusMessage}" TextColor="{StaticResource Accent}" FontAttributes="Bold" />

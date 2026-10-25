@@ -6,10 +6,24 @@ public partial class FooterView : ContentView
 {
     private AppState? _appState;
 
+    /// <summary>
+    /// Bindable property so the XAML Border can toggle IsVisible based on login state.
+    /// True once AppState.LoggedInUser is set.
+    /// </summary>
+    public static readonly BindableProperty IsLoggedInProperty =
+        BindableProperty.Create(nameof(IsLoggedIn), typeof(bool), typeof(FooterView), false);
+
+    public bool IsLoggedIn
+    {
+        get => (bool)GetValue(IsLoggedInProperty);
+        private set => SetValue(IsLoggedInProperty, value);
+    }
+
     public FooterView()
     {
         InitializeComponent();
-        Loaded += OnLoaded;
+        BindingContext = this;   // so {Binding IsLoggedIn, Source={x:Reference FooterSelf}} works
+        Loaded   += OnLoaded;
         Unloaded += OnUnloaded;
     }
 
@@ -26,9 +40,7 @@ public partial class FooterView : ContentView
     private void OnUnloaded(object? sender, EventArgs e)
     {
         if (_appState != null)
-        {
             _appState.PropertyChanged -= OnAppStatePropertyChanged;
-        }
     }
 
     private void OnAppStatePropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
@@ -39,9 +51,26 @@ public partial class FooterView : ContentView
     private void UpdateDisplay()
     {
         if (_appState == null) return;
-        IpoIdLabel.Text = _appState.ActiveIpoId.ToString();
-        ClientNameLabel.Text = _appState.ClientName ?? "None";
-        LoginByLabel.Text = _appState.LoggedInUser ?? "Unknown";
-        VersionLabel.Text = _appState.Version;
+
+        var loggedIn = _appState.IsLoggedIn;
+        IsLoggedIn = loggedIn;
+
+        if (!loggedIn)
+        {
+            IpoIdLabel.Text      = "---";
+            ClientNameLabel.Text = "---";
+            LoginByLabel.Text    = "---";
+            VersionLabel.Text    = _appState.Version;
+            return;
+        }
+
+        IpoIdLabel.Text      = _appState.ActiveIpoId > 0
+                                   ? _appState.ActiveIpoId.ToString()
+                                   : "(none)";
+        ClientNameLabel.Text = !string.IsNullOrWhiteSpace(_appState.ClientName)
+                                   ? _appState.ClientName
+                                   : "(none)";
+        LoginByLabel.Text    = _appState.LoggedInUser ?? string.Empty;
+        VersionLabel.Text    = _appState.Version;
     }
 }

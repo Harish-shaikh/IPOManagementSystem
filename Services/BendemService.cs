@@ -98,22 +98,27 @@ public class BendemService : IBendemService
 
     public async Task<bool> VerifyNsdlBendemAsync(int ipoId, string verifiedFilePath)
     {
-        // Strip the last 2 footer lines per the spec before storing
-        var lines = await File.ReadAllLinesAsync(verifiedFilePath);
-        if (lines.Length > 2)
+        // Auto-strip last 2 footer lines (EOF / END OF BENDEM DATA) per spec rule
+        var lines = (await File.ReadAllLinesAsync(verifiedFilePath)).ToList();
+        while (lines.Count > 0 &&
+               (lines[^1].Trim().Equals("EOF", StringComparison.OrdinalIgnoreCase) ||
+                lines[^1].Trim().StartsWith("END OF", StringComparison.OrdinalIgnoreCase) ||
+                string.IsNullOrWhiteSpace(lines[^1])))
         {
-            var stripped = lines[..^2];
-            var cleanPath = verifiedFilePath.Replace(".TXT", "_clean.TXT");
-            await File.WriteAllLinesAsync(cleanPath, stripped);
-            verifiedFilePath = cleanPath;
+            lines.RemoveAt(lines.Count - 1);
         }
+
+        var cleanPath = verifiedFilePath.EndsWith(".stripped.txt", StringComparison.OrdinalIgnoreCase)
+            ? verifiedFilePath
+            : verifiedFilePath + ".stripped.txt";
+        await File.WriteAllLinesAsync(cleanPath, lines);
 
         var record = await _dbService.Connection.Table<BendemFile>()
             .Where(f => f.IPO_ID == ipoId && f.Depository == "NSDL" && !f.VerifiedFlag)
             .FirstOrDefaultAsync();
         if (record == null) return false;
 
-        record.VerifiedPath = verifiedFilePath;
+        record.VerifiedPath = cleanPath;
         record.VerifiedFlag = true;
         record.VerifiedOn = DateTime.Now;
         await _dbService.Connection.UpdateAsync(record);
@@ -129,21 +134,40 @@ public class BendemService : IBendemService
             .Where(b => b.IPO_ID == ipoId && b.Status != "REJECTED").ToListAsync();
 
         var produced = new List<string>();
-        Directory.CreateDirectory(exportPath);
 
-        // 1. _IPO_Validation.xls
-        var validationPath = Path.Combine(exportPath, $"{clientName}_IPO_Validation.xlsx");
+        // 1. _IPO_Validation.xlsx in IPO_Validation directory
+        var parentDir = Path.GetDirectoryName(exportPath.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)) ?? exportPath;
+        var validationDir = Path.Combine(parentDir, "IPO_Validation");
+        Directory.CreateDirectory(validationDir);
+        var validationPath = Path.Combine(validationDir, $"{clientName}_IPO_Validation.xlsx");
         WriteValidationReport(validationPath, bids);
         produced.Add(validationPath);
 
-        // 2. _BID_ERROR_DATA.xls
+        // 2. Updation of demographic data
+        await _dbService.Connection.RunInTransactionAsync(tran =>
+        {
+            foreach (var bid in bids)
+            {
+                if (string.IsNullOrWhiteSpace(bid.MergeAcNo))
+                {
+                    bid.MergeAcNo = $"{bid.DPID}{bid.CLID}";
+                    tran.Update(bid);
+                }
+            }
+        });
+
+        // 3. _BID_ERROR_DATA.xlsx in Merge_Bid_File directory
+        Directory.CreateDirectory(exportPath);
         var errorBids = bids.Where(b => string.IsNullOrEmpty(b.PAN) || b.CLID.Length < 8).ToList();
         var errorPath = Path.Combine(exportPath, $"{clientName}_BID_ERROR_DATA.xlsx");
         WriteBidErrorReport(errorPath, errorBids);
         produced.Add(errorPath);
 
-        // 3. _BSE_BOOK_DATA.xls / _NSE_BOOK_DATA.xls
-        var bookPath = Path.Combine(exportPath, $"{clientName}_BSE_BOOK_DATA.xlsx");
+        // 4. _BSE_BOOK_DATA.xlsx / _NSE_BOOK_DATA.xlsx in Merge_Bid_File directory
+        var exchangePrefix = company?.Exchange?.Contains("NSE", StringComparison.OrdinalIgnoreCase) == true &&
+                             company?.Exchange?.Contains("BSE", StringComparison.OrdinalIgnoreCase) != true
+                             ? "NSE" : "BSE";
+        var bookPath = Path.Combine(exportPath, $"{clientName}_{exchangePrefix}_BOOK_DATA.xlsx");
         WriteBookDataReport(bookPath, bids);
         produced.Add(bookPath);
 

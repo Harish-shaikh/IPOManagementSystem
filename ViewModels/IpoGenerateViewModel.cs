@@ -81,17 +81,14 @@ public partial class IpoGenerateViewModel : BaseViewModel
 
     partial void OnIssueTypeChanged(string value)
     {
-        // Show SME confirmation when user selects SME
         if (value == "SME")
         {
             MainThread.BeginInvokeOnMainThread(async () =>
             {
-                var page = Application.Current?.Windows.FirstOrDefault()?.Page;
-                if (page != null)
-                {
-                    bool ok = await page.DisplayAlert("Issue Type", "Are you sure on SME as Issue Type?", "Yes", "No");
-                    if (!ok) IssueType = "MAIN BOARD";
-                }
+                bool confirmed = await _alertService.ConfirmAsync(
+                    "Issue Type",
+                    "Are you sure on SME as Issue Type?");
+                if (!confirmed) IssueType = "MAIN BOARD";
             });
         }
     }
@@ -151,3 +148,4 @@ public partial class IpoGenerateViewModel : BaseViewModel
         }
     }
 }
+

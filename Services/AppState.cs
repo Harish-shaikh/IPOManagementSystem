@@ -8,9 +8,14 @@ namespace IPOProcessingSystem.Services;
 /// </summary>
 public partial class AppState : ObservableObject
 {
-    [ObservableProperty] private int _activeIpoId;
-    [ObservableProperty] private string? _clientName = "None";
-    [ObservableProperty] private string? _loggedInUser = "50216";
-    [ObservableProperty] private string _version = "1.0.0";
+    [ObservableProperty] private int    _activeIpoId;
+    [ObservableProperty] private string? _clientName   = null;     // populated after IPO is selected
+    [ObservableProperty] private string? _loggedInUser = null;     // populated after successful login
+    [ObservableProperty] private string  _version      = "1.0.0";
+
+    public string? ActiveClientName => ClientName;
+
+    /// <summary>True once the user has successfully authenticated.</summary>
+    public bool IsLoggedIn => !string.IsNullOrEmpty(LoggedInUser);
 }
 

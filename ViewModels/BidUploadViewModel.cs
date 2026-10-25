@@ -1,5 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using IPOProcessingSystem.Data;
 using IPOProcessingSystem.Models;
 using IPOProcessingSystem.Services.Interfaces;
 using System.Collections.ObjectModel;
@@ -10,6 +11,7 @@ public partial class BidUploadViewModel : BaseViewModel
 {
     private readonly IBidImportService _bidImportService;
     private readonly IAlertService _alertService;
+    private readonly DatabaseService _dbService;
     private List<ApplnsxBid> _stagedRows = new();
 
     [ObservableProperty] private int ipoId;
@@ -21,10 +23,11 @@ public partial class BidUploadViewModel : BaseViewModel
 
     public ObservableCollection<ApplnsxBid> PreviewRows { get; } = new();
 
-    public BidUploadViewModel(IBidImportService bidImportService, IAlertService alertService)
+    public BidUploadViewModel(IBidImportService bidImportService, IAlertService alertService, DatabaseService dbService)
     {
         _bidImportService = bidImportService;
         _alertService = alertService;
+        _dbService = dbService;
         Title = "NSE/BSE Bid Upload";
     }
 
@@ -59,6 +62,19 @@ public partial class BidUploadViewModel : BaseViewModel
     private async Task UploadAsync()
     {
         if (string.IsNullOrWhiteSpace(FilePath)) { StatusMessage = "Please browse a file first."; return; }
+
+        if (AsbaType.Contains("MEMBER", StringComparison.OrdinalIgnoreCase))
+        {
+            var bankCount = await _dbService.Connection.Table<ApplnsxBid>()
+                .Where(b => b.IPO_ID == IpoId && b.IsBankFile).CountAsync();
+            if (bankCount == 0)
+            {
+                bool proceed = await _alertService.ConfirmAsync(
+                    "Upload Order Warning",
+                    "According to RTA rules, BANK ASBA should be uploaded BEFORE MEMBER ASBA.\n\nNo Bank ASBA bids found for this IPO. Do you wish to continue anyway?");
+                if (!proceed) return;
+            }
+        }
 
         IsBusy = true;
         try

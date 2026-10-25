@@ -31,6 +31,20 @@ public partial class TechnicalRejectionViewModel : BaseViewModel
     public ObservableCollection<ApplnsxBid> SearchResults { get; } = new();
     public ObservableCollection<RejectionChecklistItem> ChecklistItems { get; } = new();
     public ObservableCollection<BasisCategoryParameter> BasisCategories { get; } = new();
+    public ObservableCollection<string> Categories { get; } = new() { "RETAIL", "HNI", "QIB", "MARKET MAKER", "EMPLOYEE", "DEVOLVEMENT" };
+
+    // ── Panel visibility toggles ────────────────────────────────────────────
+    [ObservableProperty] private bool showRejectionChecklist;
+    [ObservableProperty] private bool showMarketMakerPanel;
+    [ObservableProperty] private bool showBasisCategoryPanel;
+    [ObservableProperty] private bool showAddBasisForm;
+
+    // ── New basis category add form fields ─────────────────────────────────
+    [ObservableProperty] private string newCategory = string.Empty;
+    [ObservableProperty] private decimal newPSize;
+    [ObservableProperty] private decimal newPSize1;
+    [ObservableProperty] private int newLot;
+    [ObservableProperty] private string newLName = string.Empty;
 
     public TechnicalRejectionViewModel(IRejectionEngineService rejectionService, IReportService reportService,
         IAlertService alertService, DatabaseService dbService)
@@ -152,12 +166,12 @@ public partial class TechnicalRejectionViewModel : BaseViewModel
         IsBusy = true;
         try
         {
-            var results = await _rejectionService.CheckMultipleApplicationsAsync(IpoId, maxAllowed: 1);
+            var results = await _rejectionService.CheckMultiplePanAsync(IpoId);
             if (results.Count == 0)
                 await _alertService.ShowAsync("Multiple PAN", "No duplicate PAN available.");
             else
             {
-                StatusMessage = $"{results.Count} Multiple application rejection(s) marked.";
+                StatusMessage = $"{results.Count} Multiple PAN rejection(s) marked.";
                 await LoadRejectionsAsync();
             }
         }
@@ -326,25 +340,64 @@ public partial class TechnicalRejectionViewModel : BaseViewModel
         foreach (var p in list) BasisCategories.Add(p);
     }
 
-    /// <summary>Market Maker — search by Order No / PAN and update category (aliases UpdateMarketMaker).</summary>
+    // ── Panel Toggles ────────────────────────────────────────────────────────
     [RelayCommand]
-    private async Task MarketMakerAsync()
+    private void ToggleRejectionChecklist() => ShowRejectionChecklist = !ShowRejectionChecklist;
+
+    [RelayCommand]
+    private void ToggleMarketMakerPanel() => ShowMarketMakerPanel = !ShowMarketMakerPanel;
+
+    [RelayCommand]
+    private void ToggleBasisCategoryPanel() => ShowBasisCategoryPanel = !ShowBasisCategoryPanel;
+
+    [RelayCommand]
+    private void SelectAllChecklist()
     {
-        await UpdateMarketMakerAsync();
+        foreach (var item in ChecklistItems) item.Include = true;
+        // Force UI refresh
+        var temp = new List<RejectionChecklistItem>(ChecklistItems);
+        ChecklistItems.Clear();
+        foreach (var item in temp) ChecklistItems.Add(item);
     }
 
-    /// <summary>Select Rejection List — load checklist items and save selections (aliases SaveChecklist).</summary>
+    /// <summary>Search ApplnsxBid by name/OrderNo for Market Maker reclassification.</summary>
     [RelayCommand]
-    private async Task SelectRejectionListAsync()
+    private async Task SearchMarketMakerAsync()
     {
-        await SaveChecklistAsync();
+        if (string.IsNullOrWhiteSpace(MarketMakerSearchName)) return;
+        var bids = await _dbService.Connection.Table<ApplnsxBid>()
+            .Where(b => b.IPO_ID == IpoId).ToListAsync();
+        var term = MarketMakerSearchName.Trim();
+        var results = bids.Where(b =>
+            (b.ClientName ?? string.Empty).Contains(term, StringComparison.OrdinalIgnoreCase) ||
+            (b.OrderNo ?? string.Empty).Contains(term, StringComparison.OrdinalIgnoreCase) ||
+            (b.PAN ?? string.Empty).Contains(term, StringComparison.OrdinalIgnoreCase)).ToList();
+        SearchResults.Clear();
+        foreach (var r in results) SearchResults.Add(r);
+        StatusMessage = $"{results.Count} result(s) found.";
     }
 
-    /// <summary>Basis Category — add a new BasisCategoryParameter (aliases AddBasisCategory).</summary>
     [RelayCommand]
-    private async Task BasisCategoryAsync()
+    private void ShowAddBasisCategory() => ShowAddBasisForm = !ShowAddBasisForm;
+
+    [RelayCommand]
+    private async Task SaveNewBasisCategoryAsync()
     {
-        await AddBasisCategoryAsync();
+        if (string.IsNullOrWhiteSpace(NewCategory)) { StatusMessage = "Category name required."; return; }
+        var param = new BasisCategoryParameter
+        {
+            IPO_ID = IpoId,
+            Category = NewCategory,
+            PSize = NewPSize,
+            PSize1 = NewPSize1,
+            Lot = NewLot,
+            LName = NewLName
+        };
+        await _dbService.Connection.InsertAsync(param);
+        await _alertService.ShowSuccessAsync("Basis Category saved.");
+        NewCategory = string.Empty; NewPSize = 0; NewPSize1 = 0; NewLot = 0; NewLName = string.Empty;
+        ShowAddBasisForm = false;
+        await LoadBasisCategoriesAsync();
     }
 }
 

@@ -57,6 +57,23 @@ public partial class AllocationViewModel : BaseViewModel
     }
 
     [RelayCommand]
+    private async Task RunRefundAsync()
+    {
+        if (!await _alertService.ConfirmAsync("Refund Process", "Run Refund calculation?")) return;
+        IsBusy = true;
+        try
+        {
+            var results = await _allocationService.RunRefundProcessAsync(IpoId);
+            Allocations.Clear();
+            foreach (var a in results) Allocations.Add(a);
+            UpdateTotals();
+            await _alertService.ShowSuccessAsync("Refund Process completed successfully.");
+            StatusMessage = $"Refund calculation done for {results.Count} category/ies.";
+        }
+        finally { IsBusy = false; }
+    }
+
+    [RelayCommand]
     private async Task ResetAsync()
     {
         if (!await _alertService.ConfirmAsync("Reset Allocation", "Reset all allocation data?")) return;

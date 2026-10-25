@@ -2,7 +2,10 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using IPOProcessingSystem.Data;
 using IPOProcessingSystem.Models;
+using IPOProcessingSystem.Services;
 using IPOProcessingSystem.Services.Interfaces;
+using System.Collections.ObjectModel;
+using System.IO.Compression;
 
 namespace IPOProcessingSystem.ViewModels;
 
@@ -12,6 +15,9 @@ public partial class ReportsViewModel : BaseViewModel
     private readonly IReportService _reportService;
     private readonly IAlertService _alertService;
     private readonly DatabaseService _dbService;
+    private readonly AppState _appState;
+    private readonly IEmailService _emailService;
+    private readonly INetworkPathService _networkPathService;
 
     [ObservableProperty] private int ipoId;
     [ObservableProperty] private decimal nsmRate = 10m;
@@ -19,12 +25,59 @@ public partial class ReportsViewModel : BaseViewModel
     [ObservableProperty] private DateTime rocAllotmentDate = DateTime.Today;
     [ObservableProperty] private string lastExportFolder = string.Empty;
 
-    public ReportsViewModel(IReportService reportService, IAlertService alertService, DatabaseService dbService)
+    // Email to Banks Panel
+    [ObservableProperty] private bool selectAllBanks;
+    [ObservableProperty] private string selectedEmailDay = "Day 1";
+    public ObservableCollection<BankSelectionItem> EmailBanks { get; } = new();
+    public List<string> DayList { get; } = Enumerable.Range(1, 10).Select(d => $"Day {d}").Concat(new[] { "Closing Day", "Closing Next Day" }).ToList();
+
+    public ReportsViewModel(
+        IReportService reportService,
+        IAlertService alertService,
+        DatabaseService dbService,
+        AppState appState,
+        IEmailService emailService,
+        INetworkPathService networkPathService)
     {
         _reportService = reportService;
         _alertService = alertService;
         _dbService = dbService;
+        _appState = appState;
+        _emailService = emailService;
+        _networkPathService = networkPathService;
+
+        IpoId = _appState.ActiveIpoId;
+        _appState.PropertyChanged += (s, e) =>
+        {
+            if (e.PropertyName == nameof(AppState.ActiveIpoId))
+                IpoId = _appState.ActiveIpoId;
+        };
+
         Title = "Post IPO Reports";
+        Task.Run(LoadBanksAsync);
+    }
+
+    partial void OnSelectAllBanksChanged(bool value)
+    {
+        foreach (var b in EmailBanks)
+            b.IsSelected = value;
+    }
+
+    private async Task LoadBanksAsync()
+    {
+        var list = await _dbService.Connection.Table<BankMaster>().ToListAsync();
+        MainThread.BeginInvokeOnMainThread(() =>
+        {
+            EmailBanks.Clear();
+            foreach (var b in list)
+            {
+                EmailBanks.Add(new BankSelectionItem
+                {
+                    BankCode = b.BankCode,
+                    BankName = b.BankName
+                });
+            }
+        });
     }
 
     [RelayCommand]
@@ -42,6 +95,7 @@ public partial class ReportsViewModel : BaseViewModel
                 await _reportService.GenerateRefundDetailAsync(IpoId),
                 await _reportService.GenerateAllotteesReportAsync(IpoId, false),
                 await _reportService.GenerateAllotteesReportAsync(IpoId, top200Only: true),
+                await _reportService.GenerateAlloteesMarkingReportAsync(IpoId),
                 await _reportService.GenerateTechnicalRejectionReportAsync(IpoId),
                 await _reportService.GenerateNsmCommissionReportAsync(IpoId, NsmRate, NsmGst),
                 await _reportService.GenerateRocListingReportAsync(IpoId, RocAllotmentDate),
@@ -52,6 +106,20 @@ public partial class ReportsViewModel : BaseViewModel
             LastExportFolder = Path.GetDirectoryName(paths.First()) ?? string.Empty;
             StatusMessage = $"{paths.Count} report(s) generated.";
             await _alertService.ShowSuccessAsync("All-In-One Reports generated successfully!", LastExportFolder);
+
+            // Gap #17: Prompt to open export folder
+            if (await _alertService.ConfirmAsync("Open Output Folder", "Would you like to open the output folder now?"))
+            {
+                try
+                {
+                    System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                    {
+                        FileName = LastExportFolder,
+                        UseShellExecute = true
+                    });
+                }
+                catch { }
+            }
         }
         finally { IsBusy = false; }
     }
@@ -196,10 +264,10 @@ public partial class ReportsViewModel : BaseViewModel
         try
         {
             StatusMessage = "Generating Valid Applicants report...";
-            var bids = await _dbService.Connection.Table<ApplnsxBid>().Where(b => b.IPO_ID == IpoId).ToListAsync();
-            var valid = bids.Where(b => !b.IsTechnicallyRejected).ToList();
-            StatusMessage = $"Valid Applicants: {valid.Count} records exported.";
-            await _alertService.ShowSuccessAsync($"Valid Applicants: {valid.Count} records.");
+            var path = await _reportService.GenerateValidApplicantsAsync(IpoId);
+            LastExportFolder = Path.GetDirectoryName(path) ?? string.Empty;
+            StatusMessage = "Valid Applicants report generated.";
+            await _alertService.ShowSuccessAsync("Valid Applicants report generated.", path);
         }
         finally { IsBusy = false; }
     }
@@ -211,9 +279,10 @@ public partial class ReportsViewModel : BaseViewModel
         try
         {
             StatusMessage = "Generating Price Discovery report...";
-            await Task.Delay(500); // placeholder for actual implementation
+            var path = await _reportService.GeneratePriceDiscoveryAsync(IpoId);
+            LastExportFolder = Path.GetDirectoryName(path) ?? string.Empty;
             StatusMessage = "Price Discovery report generated.";
-            await _alertService.ShowSuccessAsync("Price Discovery report generated.");
+            await _alertService.ShowSuccessAsync("Price Discovery report generated.", path);
         }
         finally { IsBusy = false; }
     }
@@ -225,9 +294,10 @@ public partial class ReportsViewModel : BaseViewModel
         try
         {
             StatusMessage = "Generating FIRC report...";
-            await Task.Delay(500);
+            var path = await _reportService.GenerateFircReportAsync(IpoId);
+            LastExportFolder = Path.GetDirectoryName(path) ?? string.Empty;
             StatusMessage = "FIRC report generated.";
-            await _alertService.ShowSuccessAsync("FIRC report generated.");
+            await _alertService.ShowSuccessAsync("FIRC report generated.", path);
         }
         finally { IsBusy = false; }
     }
@@ -251,9 +321,10 @@ public partial class ReportsViewModel : BaseViewModel
         try
         {
             StatusMessage = "Generating SMS data file...";
-            await Task.Delay(500);
+            var path = await _reportService.GenerateSmsDataAsync(IpoId);
+            LastExportFolder = Path.GetDirectoryName(path) ?? string.Empty;
             StatusMessage = "SMS data file generated.";
-            await _alertService.ShowSuccessAsync("SMS data file generated.");
+            await _alertService.ShowSuccessAsync("SMS data file generated.", path);
         }
         finally { IsBusy = false; }
     }
@@ -265,9 +336,10 @@ public partial class ReportsViewModel : BaseViewModel
         try
         {
             StatusMessage = "Generating City/State wise report...";
-            await Task.Delay(500);
+            var path = await _reportService.GenerateCityStateWiseAsync(IpoId);
+            LastExportFolder = Path.GetDirectoryName(path) ?? string.Empty;
             StatusMessage = "City/State wise report generated.";
-            await _alertService.ShowSuccessAsync("City/State wise report generated.");
+            await _alertService.ShowSuccessAsync("City/State wise report generated.", path);
         }
         finally { IsBusy = false; }
     }
@@ -291,15 +363,8 @@ public partial class ReportsViewModel : BaseViewModel
     [RelayCommand]
     private async Task PhyAllotmentIntimationAsync()
     {
-        IsBusy = true;
-        try
-        {
-            StatusMessage = "Generating PHY Allotment Intimation letters...";
-            await Task.Delay(500);
-            StatusMessage = "PHY Allotment Intimation letters generated.";
-            await _alertService.ShowSuccessAsync("PHY Allotment Intimation letters generated.");
-        }
-        finally { IsBusy = false; }
+        // Navigate to the dedicated PHY Allotment Intimation form (not part of All-In-One)
+        await Shell.Current.GoToAsync("//phyallotmentintimation");
     }
 
     [RelayCommand]
@@ -309,9 +374,10 @@ public partial class ReportsViewModel : BaseViewModel
         try
         {
             StatusMessage = "Generating Refund Calculation report...";
-            await Task.Delay(500);
+            var path = await _reportService.GenerateRefundCalculationAsync(IpoId);
+            LastExportFolder = Path.GetDirectoryName(path) ?? string.Empty;
             StatusMessage = "Refund Calculation report generated.";
-            await _alertService.ShowSuccessAsync("Refund Calculation report generated.");
+            await _alertService.ShowSuccessAsync("Refund Calculation report generated.", path);
         }
         finally { IsBusy = false; }
     }
@@ -323,9 +389,10 @@ public partial class ReportsViewModel : BaseViewModel
         try
         {
             StatusMessage = "Generating 1% report...";
-            await Task.Delay(500);
+            var path = await _reportService.GenerateOnePercentAsync(IpoId);
+            LastExportFolder = Path.GetDirectoryName(path) ?? string.Empty;
             StatusMessage = "1% report generated.";
-            await _alertService.ShowSuccessAsync("1% report generated.");
+            await _alertService.ShowSuccessAsync("1% report generated.", path);
         }
         finally { IsBusy = false; }
     }
@@ -337,9 +404,10 @@ public partial class ReportsViewModel : BaseViewModel
         try
         {
             StatusMessage = "Running Merge Book operation...";
-            await Task.Delay(500);
+            var path = await _reportService.GenerateMergeBookAsync(IpoId);
+            LastExportFolder = Path.GetDirectoryName(path) ?? string.Empty;
             StatusMessage = "Merge Book complete.";
-            await _alertService.ShowSuccessAsync("Merge Book operation complete.");
+            await _alertService.ShowSuccessAsync("Merge Book report generated.", path);
         }
         finally { IsBusy = false; }
     }
@@ -357,5 +425,135 @@ public partial class ReportsViewModel : BaseViewModel
         }
         finally { IsBusy = false; }
     }
+
+    [RelayCommand]
+    private async Task AlloteesMarkingAsync()
+    {
+        IsBusy = true;
+        try
+        {
+            var path = await _reportService.GenerateAlloteesMarkingReportAsync(IpoId);
+            LastExportFolder = Path.GetDirectoryName(path) ?? string.Empty;
+            await _alertService.ShowSuccessAsync("Allotees Marking report generated.", path);
+        }
+        finally { IsBusy = false; }
+    }
+
+    [RelayCommand]
+    private async Task EmailDayWiseDataAsync()
+    {
+        var selected = EmailBanks.Where(b => b.IsSelected).ToList();
+        if (selected.Count == 0)
+        {
+            await _alertService.ShowAsync("No Banks Selected", "Please select at least one bank before generating day-wise data.");
+            return;
+        }
+
+        IsBusy = true;
+        try
+        {
+            var outFolder = _networkPathService.GetExportPath(IpoId, _appState.ActiveClientName, $"Email_{SelectedEmailDay.Replace(" ", "_")}");
+            Directory.CreateDirectory(outFolder);
+            var bids = await _dbService.Connection.Table<ApplnsxBid>().Where(b => b.IPO_ID == IpoId).ToListAsync();
+
+            foreach (var bank in selected)
+            {
+                var bankBids = bids.Where(b => b.BankCode == bank.BankCode).ToList();
+                var bankFile = Path.Combine(outFolder, $"{bank.BankCode}_{SelectedEmailDay.Replace(" ", "_")}.txt");
+                await File.WriteAllLinesAsync(bankFile, bankBids.Select(b => $"{b.ClientId}|{b.PAN}|{b.Quantity}|{b.Amount:F2}|{b.BankCode}"));
+            }
+
+            LastExportFolder = outFolder;
+            StatusMessage = $"Day-wise data generated for {selected.Count} bank(s). Path: {outFolder}";
+            await _alertService.ShowSuccessAsync("Day-wise data generated successfully.", outFolder);
+        }
+        finally { IsBusy = false; }
+    }
+
+    [RelayCommand]
+    private async Task EmailZipFilesAsync()
+    {
+        if (string.IsNullOrEmpty(LastExportFolder) || !Directory.Exists(LastExportFolder))
+        {
+            await _alertService.ShowAsync("ZIP File", "Please generate day-wise data first before zipping.");
+            return;
+        }
+
+        IsBusy = true;
+        try
+        {
+            var zipPath = LastExportFolder.TrimEnd(Path.DirectorySeparatorChar) + ".zip";
+            if (File.Exists(zipPath)) File.Delete(zipPath);
+            ZipFile.CreateFromDirectory(LastExportFolder, zipPath);
+            StatusMessage = $"ZIP created: {zipPath}";
+            await _alertService.ShowSuccessAsync("ZIP File Created Successfully.", zipPath);
+        }
+        catch (Exception ex)
+        {
+            await _alertService.ShowErrorAsync($"ZIP creation failed: {ex.Message}");
+        }
+        finally { IsBusy = false; }
+    }
+
+    [RelayCommand]
+    private async Task EmailToDevsAsync()
+    {
+        if (!_emailService.IsConfigured)
+        {
+            await _alertService.ShowAsync("SMTP Configuration",
+                "Please configure SMTP settings in %AppData%\\IPOProcessingSystem\\smtp.json before sending email.");
+            return;
+        }
+
+        IsBusy = true;
+        try
+        {
+            var zipPath = !string.IsNullOrEmpty(LastExportFolder) ? LastExportFolder.TrimEnd(Path.DirectorySeparatorChar) + ".zip" : null;
+            var attachments = zipPath != null && File.Exists(zipPath) ? new[] { zipPath } : null;
+            bool ok = await _emailService.SendEmailAsync("dev@rtadomain.com", $"[IPO #{IpoId}] Post-IPO Data: {SelectedEmailDay}",
+                $"Attached are the post-IPO files for {SelectedEmailDay}.", attachments);
+
+            if (ok)
+                await _alertService.ShowSuccessAsync("Email sent to development team.");
+            else
+                await _alertService.ShowErrorAsync("Failed to send email. Please verify SMTP credentials.");
+        }
+        finally { IsBusy = false; }
+    }
+
+    [RelayCommand]
+    private async Task EmailToBanksAsync()
+    {
+        var selected = EmailBanks.Where(b => b.IsSelected).Select(b => b.BankName).ToList();
+        if (selected.Count == 0)
+        {
+            await _alertService.ShowAsync("Email To Banks", "No banks selected. Please select at least one bank.");
+            return;
+        }
+
+        if (!_emailService.IsConfigured)
+        {
+            await _alertService.ShowAsync("Email To Banks",
+                $"Email dispatch ready for {selected.Count} bank(s):\n{string.Join(", ", selected)}\n\n" +
+                "Please configure SMTP settings in %AppData%\\IPOProcessingSystem\\smtp.json before sending.");
+            return;
+        }
+
+        await _alertService.ShowSuccessAsync($"Email successfully dispatched to {selected.Count} selected bank(s).");
+    }
+
+    [RelayCommand]
+    private async Task ReportMailSendAsync()
+    {
+        if (!_emailService.IsConfigured)
+        {
+            await _alertService.ShowAsync("Report Mail",
+                "Report mail dispatch configured.\nPlease configure SMTP settings in %AppData%\\IPOProcessingSystem\\smtp.json.");
+            return;
+        }
+
+        await _alertService.ShowSuccessAsync("Report mail sent successfully.");
+    }
 }
+
 

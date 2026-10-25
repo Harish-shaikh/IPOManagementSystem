@@ -7,28 +7,42 @@
              x:DataType="vm:BasisAllotmentViewModel"
              Title="{Binding Title}">
     <Grid RowDefinitions="Auto,Auto,*" Padding="16" RowSpacing="10">
-        <!-- Header & Action Buttons -->
+        <!-- Header & Tab Navigation -->
         <VerticalStackLayout Grid.Row="0" Spacing="8">
             <Label Text="Basis of Allotment" Style="{StaticResource SectionHeader}" />
-            <HorizontalStackLayout Spacing="10" VerticalOptions="Center">
-                <Button Text="Load Data" Command="{Binding LoadCommand}" />
-                <Button Text="Process Basis" Command="{Binding ProcessBasisCommand}" BackgroundColor="{StaticResource Primary}" />
-                <Button Text="Edit Row" Command="{Binding EditSelectedRowCommand}" />
-                <Button Text="Lucky Draw" Command="{Binding GenerateLuckyDrawCommand}" />
-                <Button Text="Approve Exchange" Command="{Binding ApproveExchangeCommand}" BackgroundColor="ForestGreen" />
-                <Button Text="Export BSE" Command="{Binding ExportBseCommand}" />
-                <Button Text="Export NSE NetBAS" Command="{Binding ExportNseNetbasCommand}" />
-                <Button Text="Reset" Command="{Binding ResetBasisCommand}" BackgroundColor="Crimson" />
+            
+            <!-- Mode / Tab Switcher -->
+            <HorizontalStackLayout Spacing="8">
+                <Button Text="AUTO CALCULATION" Command="{Binding SwitchToAutoTabCommand}"
+                        BackgroundColor="{Binding IsManualUploadTab, Converter={StaticResource TabColorConverter}, ConverterParameter='False'}" />
+                <Button Text="MANUAL UPLOAD" Command="{Binding SwitchToManualTabCommand}"
+                        BackgroundColor="{Binding IsManualUploadTab, Converter={StaticResource TabColorConverter}, ConverterParameter='True'}" />
             </HorizontalStackLayout>
-            <HorizontalStackLayout Spacing="10" VerticalOptions="Center">
-                <Label Text="Filter Category:" VerticalOptions="Center" FontAttributes="Bold" />
-                <Picker Title="Select Category" ItemsSource="{Binding Categories}" SelectedItem="{Binding SelectedCategory}" WidthRequest="180" />
-                <Button Text="Filter" Command="{Binding FilterByCategoryCommand}" />
-            </HorizontalStackLayout>
+
+            <!-- Auto-calculation Toolbar (Visible when not in Manual Upload) -->
+            <VerticalStackLayout Spacing="8" IsVisible="{Binding IsManualUploadTab, Converter={StaticResource InvertedBoolConverter}}">
+                <HorizontalStackLayout Spacing="10" VerticalOptions="Center">
+                    <Button Text="Load Data" Command="{Binding LoadCommand}" />
+                    <Button Text="Process Basis" Command="{Binding ProcessBasisCommand}" BackgroundColor="{StaticResource Primary}" />
+                    <Button Text="Edit Row" Command="{Binding EditSelectedRowCommand}" />
+                    <Button Text="Lucky Draw" Command="{Binding GenerateLuckyDrawCommand}" />
+                    <Button Text="Approve Exchange" Command="{Binding ApproveExchangeCommand}" BackgroundColor="ForestGreen" />
+                    <Button Text="Export BSE" Command="{Binding ExportBseCommand}" />
+                    <Button Text="Export NSE NetBAS" Command="{Binding ExportNseNetbasCommand}" />
+                    <Button Text="Reset" Command="{Binding ResetBasisCommand}" BackgroundColor="Crimson" />
+                </HorizontalStackLayout>
+                <HorizontalStackLayout Spacing="10" VerticalOptions="Center">
+                    <Label Text="Filter Category:" VerticalOptions="Center" FontAttributes="Bold" />
+                    <Picker Title="Select Category" ItemsSource="{Binding Categories}" SelectedItem="{Binding SelectedCategory}" WidthRequest="180" />
+                    <Button Text="Filter" Command="{Binding FilterByCategoryCommand}" />
+                </HorizontalStackLayout>
+            </VerticalStackLayout>
+
             <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" />
             <Label Text="{Binding StatusMessage}" TextColor="{StaticResource Accent}" FontAttributes="Bold" />
         </VerticalStackLayout>
 
+        <!-- ══ TAB 1: AUTO CALCULATION & GRID ══ -->
         <!-- Edit Selected Row Panel (Visible when IsEditingRow == true) -->
         <Border Grid.Row="1" IsVisible="{Binding IsEditingRow}" Stroke="{StaticResource Accent}" StrokeThickness="1" Padding="12" BackgroundColor="#F9FAFB">
             <VerticalStackLayout Spacing="8">
@@ -70,8 +84,12 @@
             </VerticalStackLayout>
         </Border>
 
-        <!-- Grid of Basis Rows -->
-        <CollectionView Grid.Row="2" ItemsSource="{Binding FilteredRows}" SelectedItem="{Binding SelectedRow}" SelectionMode="Single">
+        <!-- Grid of Basis Rows (Visible in Auto Mode) -->
+        <CollectionView Grid.Row="2"
+                        IsVisible="{Binding IsManualUploadTab, Converter={StaticResource InvertedBoolConverter}}"
+                        ItemsSource="{Binding FilteredRows}"
+                        SelectedItem="{Binding SelectedRow}"
+                        SelectionMode="Single">
             <CollectionView.Header>
                 <Grid ColumnDefinitions="110,70,70,90,100,70,70,90,80,80" Padding="4" BackgroundColor="{StaticResource Primary}">
                     <Label Text="Category" TextColor="White" FontAttributes="Bold" />
@@ -103,5 +121,25 @@
                 </DataTemplate>
             </CollectionView.ItemTemplate>
         </CollectionView>
+
+        <!-- ══ TAB 2: MANUAL UPLOAD PANEL ══ -->
+        <Border Grid.Row="1" Grid.RowSpan="2"
+                IsVisible="{Binding IsManualUploadTab}"
+                Stroke="{StaticResource Primary}" StrokeThickness="2" Padding="20" BackgroundColor="#FFFFFF">
+            <VerticalStackLayout Spacing="16">
+                <Label Text="Manual Upload of Basis of Allotment" FontAttributes="Bold" FontSize="16" />
+                <Label Text="Upload an Excel (.xlsx) or CSV (.csv) file containing predefined basis rows. Required columns: Category, Serial, Applns, ShrApld, PropAlloc, MLot, NoAlto, ShrAlto, Numerator, Denomin." TextColor="#555" />
+
+                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                    <Entry Text="{Binding ManualFilePath}" Placeholder="Select file path..." IsReadOnly="True" />
+                    <Button Grid.Column="1" Text="Browse..." Command="{Binding BrowseManualFileCommand}" />
+                </Grid>
+
+                <HorizontalStackLayout Spacing="12">
+                    <Button Text="UPLOAD MANUAL BASIS" Command="{Binding UploadManualBasisCommand}" BackgroundColor="{StaticResource Primary}" />
+                    <Button Text="CANCEL / BACK" Command="{Binding SwitchToAutoTabCommand}" BackgroundColor="Gray" />
+                </HorizontalStackLayout>
+            </VerticalStackLayout>
+        </Border>
     </Grid>
 </ContentPage>

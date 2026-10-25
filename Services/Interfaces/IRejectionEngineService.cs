@@ -9,6 +9,7 @@ public interface IRejectionEngineService
     Task<List<TechnicalRejection>> CheckHniCutOffAsync(int ipoId, TimeSpan cutOffTime, DateTime closingDate);
     Task<List<TechnicalRejection>> CheckUsaApplicantAsync(int ipoId, IEnumerable<string> foreignKeywords);
     Task<List<TechnicalRejection>> CheckDuplicatePanAsync(int ipoId);
+    Task<List<TechnicalRejection>> CheckMultiplePanAsync(int ipoId);
     Task<List<TechnicalRejection>> CheckMultipleApplicationsAsync(int ipoId, int maxAllowed = 1);
     Task<List<TechnicalRejection>> CheckMinorDetailAsync(int ipoId);
     Task<List<TechnicalRejection>> CheckPanMismatchAsync(int ipoId);

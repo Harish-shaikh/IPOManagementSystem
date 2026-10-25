@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8" ?>
+<?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:vm="clr-namespace:IPOProcessingSystem.ViewModels"
@@ -42,26 +42,30 @@
 
         <CollectionView Grid.Row="1" ItemsSource="{Binding PreviewRows}">
             <CollectionView.Header>
-                <Grid ColumnDefinitions="90,120,90,90,110,90,100" Padding="4" BackgroundColor="{StaticResource Primary}">
+                <Grid ColumnDefinitions="70,110,80,70,70,70,90,70,80" Padding="4" BackgroundColor="{StaticResource Primary}">
                     <Label Text="IPO ID" TextColor="White" FontAttributes="Bold" />
                     <Label Grid.Column="1" Text="Client ID" TextColor="White" FontAttributes="Bold" />
                     <Label Grid.Column="2" Text="Order No" TextColor="White" FontAttributes="Bold" />
-                    <Label Grid.Column="3" Text="Branch" TextColor="White" FontAttributes="Bold" />
-                    <Label Grid.Column="4" Text="Symbol" TextColor="White" FontAttributes="Bold" />
-                    <Label Grid.Column="5" Text="Qty" TextColor="White" FontAttributes="Bold" />
-                    <Label Grid.Column="6" Text="Bank Code" TextColor="White" FontAttributes="Bold" />
+                    <Label Grid.Column="3" Text="Book ID" TextColor="White" FontAttributes="Bold" />
+                    <Label Grid.Column="4" Text="Branch" TextColor="White" FontAttributes="Bold" />
+                    <Label Grid.Column="5" Text="User ID" TextColor="White" FontAttributes="Bold" />
+                    <Label Grid.Column="6" Text="Symbol" TextColor="White" FontAttributes="Bold" />
+                    <Label Grid.Column="7" Text="Qty" TextColor="White" FontAttributes="Bold" />
+                    <Label Grid.Column="8" Text="Bank Code" TextColor="White" FontAttributes="Bold" />
                 </Grid>
             </CollectionView.Header>
             <CollectionView.ItemTemplate>
                 <DataTemplate x:DataType="models:ApplnsxBid">
-                    <Grid ColumnDefinitions="90,120,90,90,110,90,100" Padding="4">
+                    <Grid ColumnDefinitions="70,110,80,70,70,70,90,70,80" Padding="4">
                         <Label Text="{Binding IPO_ID}" />
                         <Label Grid.Column="1" Text="{Binding ClientId}" />
                         <Label Grid.Column="2" Text="{Binding OrderNo}" />
-                        <Label Grid.Column="3" Text="{Binding Branch}" />
-                        <Label Grid.Column="4" Text="{Binding Symbol}" />
-                        <Label Grid.Column="5" Text="{Binding Quantity}" />
-                        <Label Grid.Column="6" Text="{Binding BankCode}" />
+                        <Label Grid.Column="3" Text="{Binding BookId}" />
+                        <Label Grid.Column="4" Text="{Binding Branch}" />
+                        <Label Grid.Column="5" Text="{Binding UserId}" />
+                        <Label Grid.Column="6" Text="{Binding Symbol}" />
+                        <Label Grid.Column="7" Text="{Binding Quantity}" />
+                        <Label Grid.Column="8" Text="{Binding BankCode}" />
                     </Grid>
                 </DataTemplate>
             </CollectionView.ItemTemplate>

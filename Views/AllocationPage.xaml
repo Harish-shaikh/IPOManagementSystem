@@ -12,6 +12,7 @@
             <HorizontalStackLayout Spacing="10">
                 <Button Text="Load Data" Command="{Binding LoadCommand}" />
                 <Button Text="RUN ALLOTMENT" Command="{Binding RunAllotmentCommand}" BackgroundColor="ForestGreen" />
+                <Button Text="REFUND PROCESS" Command="{Binding RunRefundCommand}" BackgroundColor="DarkOrange" />
                 <Button Text="Reset" Command="{Binding ResetCommand}" BackgroundColor="Crimson" />
             </HorizontalStackLayout>
             <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" />

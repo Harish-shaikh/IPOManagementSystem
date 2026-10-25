@@ -1,4 +1,4 @@
-﻿using System.Globalization;
+using System.Globalization;
 
 namespace IPOProcessingSystem.Helpers;
 
@@ -21,4 +21,40 @@ public class InvertedBoolConverter : IValueConverter
 
     public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
         => value is bool b && !b;
+}
+
+/// <summary>
+/// Returns true when the bound string is non-null and non-empty.
+/// Used by IsVisible on status/error Label elements throughout the app.
+/// </summary>
+public class StringNotEmptyConverter : IValueConverter
+{
+    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+        => !string.IsNullOrEmpty(value?.ToString());
+
+    public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
+        => Binding.DoNothing;
+}
+
+/// <summary>
+/// Highlights the active tab button. When the bound string (ActiveTab) equals
+/// ConverterParameter the active colour is returned; otherwise a muted colour.
+/// </summary>
+public class TabColorConverter : IValueConverter
+{
+    // Active tab colour — matches the app's Primary resource.
+    private static readonly Color ActiveColor  = Color.FromArgb("#1565C0"); // deep blue
+    private static readonly Color InactiveColor = Color.FromArgb("#90A4AE"); // slate-grey
+
+    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+    {
+        var active = value?.ToString();
+        var tab    = parameter?.ToString();
+        return string.Equals(active, tab, StringComparison.OrdinalIgnoreCase)
+            ? (object)ActiveColor
+            : InactiveColor;
+    }
+
+    public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
+        => Binding.DoNothing;
 }

@@ -6,83 +6,130 @@
              x:Class="IPOProcessingSystem.Views.DayWisePage"
              x:DataType="vm:DayWiseViewModel"
              Title="{Binding Title}">
-    <Grid RowDefinitions="Auto,*" Padding="16" RowSpacing="10">
-        <VerticalStackLayout Grid.Row="0" Spacing="8">
-            <Label Text="Day Wise Process" Style="{StaticResource SectionHeader}" />
+    <ScrollView>
+        <Grid RowDefinitions="Auto,*" Padding="16" RowSpacing="10">
+            <VerticalStackLayout Grid.Row="0" Spacing="8">
+                <Label Text="Day Wise Process" Style="{StaticResource SectionHeader}" />
 
-            <!-- Exchange + ASBA Type -->
-            <HorizontalStackLayout Spacing="16">
-                <Label Text="Stock Exchange" VerticalOptions="Center" />
-                <RadioButton Content="NSE" GroupName="DWExch"
-                             IsChecked="{Binding Exchange, Converter={StaticResource StringEqualsConverter}, ConverterParameter=NSE}" />
-                <RadioButton Content="BSE" GroupName="DWExch"
-                             IsChecked="{Binding Exchange, Converter={StaticResource StringEqualsConverter}, ConverterParameter=BSE}" />
-            </HorizontalStackLayout>
+                <!-- Exchange + ASBA Type -->
+                <HorizontalStackLayout Spacing="16">
+                    <Label Text="Stock Exchange" VerticalOptions="Center" />
+                    <RadioButton Content="NSE" GroupName="DWExch"
+                                 IsChecked="{Binding Exchange, Converter={StaticResource StringEqualsConverter}, ConverterParameter=NSE}" />
+                    <RadioButton Content="BSE" GroupName="DWExch"
+                                 IsChecked="{Binding Exchange, Converter={StaticResource StringEqualsConverter}, ConverterParameter=BSE}" />
+                </HorizontalStackLayout>
 
-            <HorizontalStackLayout Spacing="16">
-                <Label Text="ASBA Type" VerticalOptions="Center" />
-                <RadioButton Content="Member ASBA" GroupName="DWAsba"
-                             IsChecked="{Binding AsbaType, Converter={StaticResource StringEqualsConverter}, ConverterParameter='MEMBER ASBA'}" />
-                <RadioButton Content="Bank ASBA" GroupName="DWAsba"
-                             IsChecked="{Binding AsbaType, Converter={StaticResource StringEqualsConverter}, ConverterParameter='BANK ASBA'}" />
-            </HorizontalStackLayout>
+                <HorizontalStackLayout Spacing="16">
+                    <Label Text="ASBA Type" VerticalOptions="Center" />
+                    <RadioButton Content="Member ASBA" GroupName="DWAsba"
+                                 IsChecked="{Binding AsbaType, Converter={StaticResource StringEqualsConverter}, ConverterParameter='MEMBER ASBA'}" />
+                    <RadioButton Content="Bank ASBA" GroupName="DWAsba"
+                                 IsChecked="{Binding AsbaType, Converter={StaticResource StringEqualsConverter}, ConverterParameter='BANK ASBA'}" />
+                </HorizontalStackLayout>
 
-            <!-- File Browse + Upload -->
-            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
-                <Entry Grid.Column="0" Text="{Binding FilePath}" Placeholder="Bid file path" IsReadOnly="True" />
-                <Button Grid.Column="1" Text="Browse" Command="{Binding BrowseCommand}" />
-            </Grid>
-
-            <!-- Day selector -->
-            <HorizontalStackLayout Spacing="12">
-                <Label Text="Select Day" VerticalOptions="Center" />
-                <Picker ItemsSource="{Binding DayOptions}" SelectedItem="{Binding SelectedDay}"
-                        WidthRequest="80" />
-            </HorizontalStackLayout>
-
-            <!-- Action Buttons Row 1 -->
-            <FlexLayout Direction="Row" Wrap="Wrap" AlignItems="Center">
-                <Button Text="Upload" Command="{Binding UploadCommand}" Margin="4" />
-                <Button Text="Process" Command="{Binding ProcessCommand}" Margin="4" />
-                <Button Text="Map IFSC" Command="{Binding MapIfscCommand}" Margin="4" />
-                <Button Text="Day Wise Data" Command="{Binding GenerateDayWiseDataCommand}" Margin="4" />
-                <Button Text="Email To Banks" Command="{Binding EmailToBanksCommand}" BackgroundColor="#D62828" Margin="4" />
-            </FlexLayout>
-
-            <!-- Totals -->
-            <HorizontalStackLayout Spacing="24">
-                <Label Text="{Binding TotalRecords, StringFormat='Records: {0}'}" />
-                <Label Text="{Binding TotalQuantity, StringFormat='Quantity: {0}'}" />
-            </HorizontalStackLayout>
-
-            <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" />
-            <Label Text="{Binding StatusMessage}" TextColor="{StaticResource Accent}" />
-        </VerticalStackLayout>
-
-        <!-- Preview grid -->
-        <CollectionView Grid.Row="1" ItemsSource="{Binding PreviewRows}">
-            <CollectionView.Header>
-                <Grid ColumnDefinitions="80,100,90,90,90,90" Padding="4" BackgroundColor="{StaticResource Primary}">
-                    <Label Text="IPO ID" TextColor="White" FontAttributes="Bold" />
-                    <Label Grid.Column="1" Text="Client ID" TextColor="White" FontAttributes="Bold" />
-                    <Label Grid.Column="2" Text="Order No" TextColor="White" FontAttributes="Bold" />
-                    <Label Grid.Column="3" Text="Symbol" TextColor="White" FontAttributes="Bold" />
-                    <Label Grid.Column="4" Text="Qty" TextColor="White" FontAttributes="Bold" />
-                    <Label Grid.Column="5" Text="Bank Code" TextColor="White" FontAttributes="Bold" />
+                <!-- File Browse + Upload -->
+                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                    <Entry Grid.Column="0" Text="{Binding FilePath}" Placeholder="Bid file path" IsReadOnly="True" />
+                    <Button Grid.Column="1" Text="Browse" Command="{Binding BrowseCommand}" />
                 </Grid>
-            </CollectionView.Header>
-            <CollectionView.ItemTemplate>
-                <DataTemplate x:DataType="models:ApplnsxBid">
-                    <Grid ColumnDefinitions="80,100,90,90,90,90" Padding="4">
-                        <Label Text="{Binding IPO_ID}" />
-                        <Label Grid.Column="1" Text="{Binding ClientId}" />
-                        <Label Grid.Column="2" Text="{Binding OrderNo}" />
-                        <Label Grid.Column="3" Text="{Binding Symbol}" />
-                        <Label Grid.Column="4" Text="{Binding Quantity}" />
-                        <Label Grid.Column="5" Text="{Binding BankCode}" />
+
+                <!-- Day selector -->
+                <HorizontalStackLayout Spacing="12">
+                    <Label Text="Select Day" VerticalOptions="Center" />
+                    <Picker ItemsSource="{Binding DayOptions}" SelectedItem="{Binding SelectedDay}"
+                            WidthRequest="80" />
+                </HorizontalStackLayout>
+
+                <!-- Action Buttons Row 1 -->
+                <FlexLayout Direction="Row" Wrap="Wrap" AlignItems="Center">
+                    <Button Text="Upload" Command="{Binding UploadCommand}" Margin="4" />
+                    <Button Text="Clear Data" Command="{Binding ClearDataCommand}" BackgroundColor="{StaticResource Accent}" Margin="4" />
+                    <Button Text="Process" Command="{Binding ProcessCommand}" Margin="4" />
+                    <Button Text="Map IFSC" Command="{Binding MapIfscCommand}" Margin="4" />
+                </FlexLayout>
+
+                <!-- Totals -->
+                <HorizontalStackLayout Spacing="24">
+                    <Label Text="{Binding TotalRecords, StringFormat='Records: {0}'}" />
+                    <Label Text="{Binding TotalQuantity, StringFormat='Quantity: {0}'}" />
+                </HorizontalStackLayout>
+
+                <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" />
+                <Label Text="{Binding StatusMessage}" TextColor="{StaticResource Accent}" />
+
+                <!-- ═══════════════════════════════════════════════════════════
+                     EMAIL TO BANKS PANEL
+                     ═══════════════════════════════════════════════════════════ -->
+                <Border Stroke="{StaticResource Primary}" StrokeThickness="1" Padding="12" BackgroundColor="#FDFDFD" Margin="0,8,0,0">
+                    <VerticalStackLayout Spacing="8">
+                        <Label Text="Email to Banks" FontAttributes="Bold" FontSize="14" />
+
+                        <!-- Select All toggle -->
+                        <HorizontalStackLayout Spacing="8">
+                            <CheckBox IsChecked="{Binding SelectAllBanks}" />
+                            <Label Text="Select All Banks" VerticalOptions="Center" FontAttributes="Bold" />
+                        </HorizontalStackLayout>
+
+                        <!-- Bank Checklist -->
+                        <CollectionView ItemsSource="{Binding Banks}" HeightRequest="180" BackgroundColor="#F7F7F7">
+                            <CollectionView.ItemTemplate>
+                                <DataTemplate x:DataType="models:BankSelectionItem">
+                                    <HorizontalStackLayout Spacing="8" Padding="4,2">
+                                        <CheckBox IsChecked="{Binding IsSelected}" />
+                                        <Label VerticalOptions="Center">
+                                            <Label.Text>
+                                                <MultiBinding StringFormat="{}{0}  —  {1}">
+                                                    <Binding Path="BankCode" />
+                                                    <Binding Path="BankName" />
+                                                </MultiBinding>
+                                            </Label.Text>
+                                        </Label>
+                                    </HorizontalStackLayout>
+                                </DataTemplate>
+                            </CollectionView.ItemTemplate>
+                        </CollectionView>
+
+                        <!-- Email Action Buttons -->
+                        <FlexLayout Direction="Row" Wrap="Wrap" AlignItems="Center">
+                            <Button Text="Day Wise Data" Command="{Binding GenerateDayWiseDataCommand}"
+                                    BackgroundColor="{StaticResource Primary}" TextColor="White" Margin="4" />
+                            <Button Text="ZIP FILE" Command="{Binding ZipFileCommand}"
+                                    BackgroundColor="#5C6BC0" TextColor="White" Margin="4" />
+                            <Button Text="Email To Banks" Command="{Binding EmailToBanksCommand}"
+                                    BackgroundColor="#D62828" TextColor="White" Margin="4" />
+                            <Button Text="Report Mail" Command="{Binding ReportMailCommand}"
+                                    BackgroundColor="#37474F" TextColor="White" Margin="4" />
+                        </FlexLayout>
+                    </VerticalStackLayout>
+                </Border>
+            </VerticalStackLayout>
+
+            <!-- Preview grid -->
+            <CollectionView Grid.Row="1" ItemsSource="{Binding PreviewRows}">
+                <CollectionView.Header>
+                    <Grid ColumnDefinitions="80,100,90,90,90,90" Padding="4" BackgroundColor="{StaticResource Primary}">
+                        <Label Text="IPO ID" TextColor="White" FontAttributes="Bold" />
+                        <Label Grid.Column="1" Text="Client ID" TextColor="White" FontAttributes="Bold" />
+                        <Label Grid.Column="2" Text="Order No" TextColor="White" FontAttributes="Bold" />
+                        <Label Grid.Column="3" Text="Symbol" TextColor="White" FontAttributes="Bold" />
+                        <Label Grid.Column="4" Text="Qty" TextColor="White" FontAttributes="Bold" />
+                        <Label Grid.Column="5" Text="Bank Code" TextColor="White" FontAttributes="Bold" />
                     </Grid>
-                </DataTemplate>
-            </CollectionView.ItemTemplate>
-        </CollectionView>
-    </Grid>
+                </CollectionView.Header>
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="models:ApplnsxBid">
+                        <Grid ColumnDefinitions="80,100,90,90,90,90" Padding="4">
+                            <Label Text="{Binding IPO_ID}" />
+                            <Label Grid.Column="1" Text="{Binding ClientId}" />
+                            <Label Grid.Column="2" Text="{Binding OrderNo}" />
+                            <Label Grid.Column="3" Text="{Binding Symbol}" />
+                            <Label Grid.Column="4" Text="{Binding Quantity}" />
+                            <Label Grid.Column="5" Text="{Binding BankCode}" />
+                        </Grid>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+        </Grid>
+    </ScrollView>
 </ContentPage>

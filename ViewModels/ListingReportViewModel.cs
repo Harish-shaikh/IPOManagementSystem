@@ -12,6 +12,7 @@ public partial class ListingReportViewModel : BaseViewModel
 {
     private readonly IAlertService _alertService;
     private readonly DatabaseService _dbService;
+    private readonly INetworkPathService _networkPathService;
 
     [ObservableProperty] private int ipoId;
     [ObservableProperty] private DateTime preIssueDate = DateTime.Today;
@@ -31,10 +32,11 @@ public partial class ListingReportViewModel : BaseViewModel
         ? "⚠ Post-Issue date is Friday — use Saturday's date per exchange convention."
         : string.Empty;
 
-    public ListingReportViewModel(IAlertService alertService, DatabaseService dbService)
+    public ListingReportViewModel(IAlertService alertService, DatabaseService dbService, INetworkPathService networkPathService)
     {
         _alertService = alertService;
         _dbService = dbService;
+        _networkPathService = networkPathService;
         Title = "Listing Report";
     }
 
@@ -67,8 +69,8 @@ public partial class ListingReportViewModel : BaseViewModel
             var company = await _dbService.Connection.Table<CompanyMaster>()
                 .Where(c => c.IPO_ID == IpoId).FirstOrDefaultAsync();
             var clientName = company?.IssuerName ?? $"IPO_{IpoId}";
-            var exportPath = Path.Combine(FileSystem.AppDataDirectory, "Exports",
-                $"IPO_{IpoId}", "ListingReports", ReportFor);
+            var exportPath = _networkPathService.GetExportPath(IpoId, clientName,
+                Path.Combine("ListingReports", ReportFor));
             Directory.CreateDirectory(exportPath);
 
             var fileName = $"{ReportType}_{clientName}_{ReportFor}.xlsx";

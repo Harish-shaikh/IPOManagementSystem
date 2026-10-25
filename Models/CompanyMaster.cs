@@ -24,5 +24,4 @@ public class CompanyMaster
     public string? LeadManager1 { get; set; }
     public string? LeadManager2 { get; set; }
     public bool OfferForSale { get; set; }        // false = "Unavailable"
-    public bool ExchangeApproved { get; set; }   // basis approved flag
 }
