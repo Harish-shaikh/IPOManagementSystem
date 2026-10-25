@@ -25,25 +25,17 @@ public partial class AppShell : Shell
         _appState = appState;
         InitializeComponent();
 
-        // Listen for successful login to unlock the full navigation
+        // Listen for successful login to navigate to initial screen
         WeakReferenceMessenger.Default.Register<LoginSuccessMessage>(this, (_, msg) =>
         {
             MainThread.BeginInvokeOnMainThread(() =>
             {
-                // Show all flyout items and enable flyout navigation
-                PreIpoFlyoutItem.IsVisible = true;
-                IpoProcessingFlyoutItem.IsVisible = true;
-                PostIpoFlyoutItem.IsVisible = true;
-                SettingsFlyoutItem.IsVisible = true;
-                SystemFlyoutItem.IsVisible = true;
-                FlyoutBehavior = FlyoutBehavior.Flyout;
-
-                // Navigate to IPO Generate page as the initial landing screen after login
+                FlyoutBehavior = FlyoutBehavior.Disabled;
                 GoToAsync("//ipogenerate");
             });
         });
 
-        // Listen for logout message to collapse navigation and clear state
+        // Listen for logout message to clear state and return to login
         WeakReferenceMessenger.Default.Register<LogoutMessage>(this, (_, _) =>
         {
             MainThread.BeginInvokeOnMainThread(() =>
@@ -53,14 +45,7 @@ public partial class AppShell : Shell
                 _appState.ClientName = "None";
                 _appState.LoggedInUser = string.Empty;
 
-                // Collapse all flyout sections — user must log in again
-                PreIpoFlyoutItem.IsVisible = false;
-                IpoProcessingFlyoutItem.IsVisible = false;
-                PostIpoFlyoutItem.IsVisible = false;
-                SettingsFlyoutItem.IsVisible = false;
-                SystemFlyoutItem.IsVisible = false;
                 FlyoutBehavior = FlyoutBehavior.Disabled;
-
                 GoToAsync("//login");
             });
         });
@@ -73,8 +58,14 @@ public partial class AppShell : Shell
     {
         if (sender is MenuFlyoutItem item && item.CommandParameter is string route)
         {
+            if (string.IsNullOrEmpty(_appState.LoggedInUser) && route != "//login")
+            {
+                await DisplayAlert("Access Restricted", "Please login first to access the system.", "OK");
+                return;
+            }
+
             try { await GoToAsync(route); }
-            catch { /* ignore navigation errors if not logged in */ }
+            catch { /* ignore navigation errors */ }
         }
     }
 

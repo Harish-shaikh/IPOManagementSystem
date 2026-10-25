@@ -15,8 +15,7 @@ public partial class BidUploadViewModel : BaseViewModel
     private List<ApplnsxBid> _stagedRows = new();
 
     [ObservableProperty] private int ipoId;
-    [ObservableProperty] private string exchange = "BSE"; // NSE / BSE
-    [ObservableProperty] private string asbaType = "BANK ASBA"; // BANK ASBA / MEMBER ASBA / UPI ASBA
+    [ObservableProperty] private string asbaType = "BANK ASBA"; // BANK ASBA / MEMBER ASBA / MISSMATCH ASBA / NONBANK ASBA
     [ObservableProperty] private string filePath = string.Empty;
     [ObservableProperty] private int totalRecords;
     [ObservableProperty] private decimal totalQuantity;
@@ -28,27 +27,21 @@ public partial class BidUploadViewModel : BaseViewModel
         _bidImportService = bidImportService;
         _alertService = alertService;
         _dbService = dbService;
-        Title = "NSE/BSE Bid Upload";
+        Title = "Bid Upload";
     }
 
     [RelayCommand]
     private async Task BrowseAsync()
     {
-        var fileTypes = Exchange == "BSE"
-            ? new FilePickerFileType(new Dictionary<DevicePlatform, IEnumerable<string>>
-              {
-                  { DevicePlatform.WinUI, new[] { ".dat" } },
-                  { DevicePlatform.macOS, new[] { "dat" } }
-              })
-            : new FilePickerFileType(new Dictionary<DevicePlatform, IEnumerable<string>>
-              {
-                  { DevicePlatform.WinUI, new[] { ".csv" } },
-                  { DevicePlatform.macOS, new[] { "csv" } }
-              });
+        var fileTypes = new FilePickerFileType(new Dictionary<DevicePlatform, IEnumerable<string>>
+        {
+            { DevicePlatform.WinUI, new[] { ".dat", ".csv", ".txt" } },
+            { DevicePlatform.macOS, new[] { "dat", "csv", "txt" } }
+        });
 
         var result = await FilePicker.Default.PickAsync(new PickOptions
         {
-            PickerTitle = $"Select {Exchange} Bid File",
+            PickerTitle = "Select Bid File",
             FileTypes = fileTypes
         });
 
@@ -80,17 +73,15 @@ public partial class BidUploadViewModel : BaseViewModel
         try
         {
             bool isBankFile = AsbaType.Contains("BANK", StringComparison.OrdinalIgnoreCase) && !AsbaType.Contains("MEMBER");
-            _stagedRows = await _bidImportService.ParseBidFileAsync(FilePath, IpoId, AsbaType, isBankFile, Exchange);
+            _stagedRows = await _bidImportService.ParseBidFileAsync(FilePath, IpoId, AsbaType, isBankFile);
 
             PreviewRows.Clear();
-            foreach (var row in _stagedRows.Take(200)) PreviewRows.Add(row); // preview cap for UI
-
             var result = await _bidImportService.BulkInsertAsync(_stagedRows);
             TotalRecords = result.TotalRecords;
             TotalQuantity = result.TotalQuantity;
             StatusMessage = result.Message;
 
-            await _alertService.ShowSuccessAsync($"{Exchange} - {AsbaType} UPLOADED SUCCESSFULLY",
+            await _alertService.ShowSuccessAsync($"{AsbaType} UPLOADED SUCCESSFULLY",
                 $"Total Records: {TotalRecords:N0}\nTotal Quantity: {TotalQuantity:N0}");
         }
         finally { IsBusy = false; }

@@ -11,14 +11,7 @@
             <VerticalStackLayout Grid.Row="0" Spacing="8">
                 <Label Text="Day Wise Process" Style="{StaticResource SectionHeader}" />
 
-                <!-- Exchange + ASBA Type -->
-                <HorizontalStackLayout Spacing="16">
-                    <Label Text="Stock Exchange" VerticalOptions="Center" />
-                    <RadioButton Content="NSE" GroupName="DWExch"
-                                 IsChecked="{Binding Exchange, Converter={StaticResource StringEqualsConverter}, ConverterParameter=NSE}" />
-                    <RadioButton Content="BSE" GroupName="DWExch"
-                                 IsChecked="{Binding Exchange, Converter={StaticResource StringEqualsConverter}, ConverterParameter=BSE}" />
-                </HorizontalStackLayout>
+
 
                 <HorizontalStackLayout Spacing="16">
                     <Label Text="ASBA Type" VerticalOptions="Center" />

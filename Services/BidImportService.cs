@@ -1,4 +1,4 @@
-﻿using System.Globalization;
+using System.Globalization;
 using IPOProcessingSystem.Data;
 using IPOProcessingSystem.Models;
 using IPOProcessingSystem.Services.Interfaces;
@@ -21,16 +21,14 @@ public class BidImportService : IBidImportService
         _dbService = dbService;
     }
 
-    public async Task<List<ApplnsxBid>> ParseBidFileAsync(string filePath, int ipoId, string asbaType, bool isBankFile, string exchange)
+    public async Task<List<ApplnsxBid>> ParseBidFileAsync(string filePath, int ipoId, string asbaType, bool isBankFile, string exchange = "")
     {
         var results = new List<ApplnsxBid>();
         if (!File.Exists(filePath))
             throw new FileNotFoundException("Bid file not found", filePath);
 
-        // NSE files are comma-delimited CSV. BSE files are typically pipe-delimited .DAT.
-        // Adjust the delimiter/column-order mapping below to match your exchange's exact
-        // record layout (BSE/NSE publish a fixed column spec per bid file version).
-        char delimiter = exchange.Equals("NSE", StringComparison.OrdinalIgnoreCase) ? ',' : '|';
+        // Auto-detect delimiter: comma for CSV, pipe for DAT/fixed-width
+        char delimiter = filePath.EndsWith(".csv", StringComparison.OrdinalIgnoreCase) ? ',' : '|';
 
         using var reader = new StreamReader(filePath);
         string? line;

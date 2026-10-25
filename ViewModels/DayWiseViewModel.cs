@@ -24,7 +24,6 @@ public partial class DayWiseViewModel : BaseViewModel
     private string _lastExportFolder = string.Empty;
 
     [ObservableProperty] private int ipoId;
-    [ObservableProperty] private string exchange = "BSE";
     [ObservableProperty] private string asbaType = "MEMBER ASBA";
     [ObservableProperty] private string filePath = string.Empty;
     [ObservableProperty] private int totalRecords;
@@ -95,13 +94,13 @@ public partial class DayWiseViewModel : BaseViewModel
     [RelayCommand]
     private async Task BrowseAsync()
     {
-        var ext = Exchange == "NSE" ? ".csv" : ".dat";
         var result = await FilePicker.Default.PickAsync(new PickOptions
         {
-            PickerTitle = $"Select {Exchange} Bid File ({ext})",
+            PickerTitle = "Select Bid File",
             FileTypes = new FilePickerFileType(new Dictionary<DevicePlatform, IEnumerable<string>>
             {
-                { DevicePlatform.WinUI, new[] { ext } }
+                { DevicePlatform.WinUI, new[] { ".dat", ".csv", ".txt" } },
+                { DevicePlatform.macOS, new[] { "dat", "csv", "txt" } }
             })
         });
         if (result != null) FilePath = result.FullPath;
@@ -116,7 +115,7 @@ public partial class DayWiseViewModel : BaseViewModel
         {
             bool isBank = AsbaType.Contains("BANK", StringComparison.OrdinalIgnoreCase)
                           && !AsbaType.Contains("MEMBER");
-            var rows = await _bidImportService.ParseBidFileAsync(FilePath, IpoId, AsbaType, isBank, Exchange);
+            var rows = await _bidImportService.ParseBidFileAsync(FilePath, IpoId, AsbaType, isBank);
             var result = await _bidImportService.BulkInsertAsync(rows);
             TotalRecords = result.TotalRecords;
             TotalQuantity = result.TotalQuantity;

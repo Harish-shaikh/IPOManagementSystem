@@ -14,10 +14,8 @@ public partial class CompanyMasterViewModel : BaseViewModel
     [ObservableProperty] private CompanyMaster company = new();
     [ObservableProperty] private bool isEditing;
 
-    public string[] IssueTypes { get; } = { "SME", "MAIN BOARD" };
+    public string[] IssueTypes { get; } = { "SME" };
     public string[] Exchanges { get; } = { "ONLY NSE", "ONLY BSE", "BOTH" };
-
-    public string OfferForSaleLabel => Company?.OfferForSale == true ? "Available" : "Unavailable";
 
     public CompanyMasterViewModel(DatabaseService dbService, IAlertService alertService)
     {
@@ -26,23 +24,22 @@ public partial class CompanyMasterViewModel : BaseViewModel
         Title = "Company Master";
     }
 
-    partial void OnCompanyChanged(CompanyMaster value)
-    {
-        OnPropertyChanged(nameof(OfferForSaleLabel));
-    }
-
     [RelayCommand]
     public async Task LoadAsync(int ipoId)
     {
         var existing = await _dbService.Connection.Table<CompanyMaster>()
             .Where(c => c.IPO_ID == ipoId).FirstOrDefaultAsync();
-        if (existing != null) Company = existing;
+        if (existing != null)
+        {
+            existing.IssueType = "SME";
+            Company = existing;
+        }
     }
 
     [RelayCommand]
     private void New()
     {
-        Company = new CompanyMaster();
+        Company = new CompanyMaster { IssueType = "SME" };
         StatusMessage = "New company master record created.";
     }
 

@@ -1,4 +1,4 @@
-﻿using IPOProcessingSystem.Models;
+using IPOProcessingSystem.Models;
 
 namespace IPOProcessingSystem.Services.Interfaces;
 
@@ -12,8 +12,8 @@ public class ImportResult
 
 public interface IBidImportService
 {
-    /// <summary>Parses a BSE .DAT or NSE .CSV bid file and stages rows into memory for preview.</summary>
-    Task<List<ApplnsxBid>> ParseBidFileAsync(string filePath, int ipoId, string asbaType, bool isBankFile, string exchange);
+    /// <summary>Parses a bid file and stages rows into memory for preview.</summary>
+    Task<List<ApplnsxBid>> ParseBidFileAsync(string filePath, int ipoId, string asbaType, bool isBankFile, string exchange = "");
 
     /// <summary>Bulk-inserts staged rows into Applnsx inside a single SQLite transaction (fast batch).</summary>
     Task<ImportResult> BulkInsertAsync(List<ApplnsxBid> rows);

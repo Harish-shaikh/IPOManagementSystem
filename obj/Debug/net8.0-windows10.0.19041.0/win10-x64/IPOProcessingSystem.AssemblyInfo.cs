@@ -17,7 +17,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("IPOProcessingSystem")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0+35d9e2343fe8d1ad0656dca07509057bb06413e6")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0+09922db08d4abfb923f57b39b138eeecfa3c1ccd")]
 [assembly: System.Reflection.AssemblyProductAttribute("IPOProcessingSystem")]
 [assembly: System.Reflection.AssemblyTitleAttribute("IPOProcessingSystem")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

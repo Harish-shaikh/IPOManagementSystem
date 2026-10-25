@@ -10,7 +10,7 @@ public class CompanyMaster
     public int ClientId { get; set; }
     public string ClientName { get; set; } = string.Empty;    // auto-filled on browse
     public string IssuerName { get; set; } = string.Empty;
-    public string IssueType { get; set; } = "SME";            // SME / MAIN BOARD
+    public string IssueType { get; set; } = "SME";            // SME
     public string Exchange { get; set; } = "ONLY NSE";        // ONLY NSE / NSE+BSE / ONLY BSE
     public decimal IssueSize { get; set; }
     public decimal FaceValue { get; set; }
@@ -23,5 +23,5 @@ public class CompanyMaster
     public DateTime ClosingDate { get; set; }
     public string? LeadManager1 { get; set; }
     public string? LeadManager2 { get; set; }
-    public bool OfferForSale { get; set; }        // false = "Unavailable"
+    public decimal OfferForSale { get; set; }     // Numeric: Offer For Sale shares/amount
 }

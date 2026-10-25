@@ -8,7 +8,7 @@
     <ScrollView>
         <VerticalStackLayout Padding="20" Spacing="10">
             <Label Text="Company Master (Pre-IPO Setup)" Style="{StaticResource SectionHeader}" />
-            <Grid ColumnDefinitions="180,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" RowSpacing="8" ColumnSpacing="8">
+            <Grid ColumnDefinitions="180,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" RowSpacing="8" ColumnSpacing="8">
                 <!-- Row 0: Client Browse -->
                 <Label Text="Client ID" Grid.Row="0" Grid.Column="0" VerticalOptions="Center"/>
                 <Grid Grid.Row="0" Grid.Column="1" ColumnDefinitions="*,Auto" ColumnSpacing="4">
@@ -16,72 +16,65 @@
                     <Button Grid.Column="1" Text="Browse" Command="{Binding BrowseClientCommand}" WidthRequest="70" />
                 </Grid>
 
-                <!-- Row 1: Client Name (auto-filled) -->
-                <Label Text="Client Name" Grid.Row="1" Grid.Column="0" VerticalOptions="Center"/>
-                <Entry Grid.Row="1" Grid.Column="1" Text="{Binding Company.ClientName}" IsReadOnly="True" BackgroundColor="#F0F0F0" />
+                <!-- Row 1: Issuer Name -->
+                <Label Text="Issuer Name" Grid.Row="1" Grid.Column="0" VerticalOptions="Center"/>
+                <Entry Grid.Row="1" Grid.Column="1" Text="{Binding Company.IssuerName}" />
 
-                <!-- Row 2: Issuer Name -->
-                <Label Text="Issuer Name" Grid.Row="2" Grid.Column="0" VerticalOptions="Center"/>
-                <Entry Grid.Row="2" Grid.Column="1" Text="{Binding Company.IssuerName}" />
+                <!-- Row 2: Issue Type (Only SME) -->
+                <Label Text="Issue Type" Grid.Row="2" Grid.Column="0" VerticalOptions="Center"/>
+                <Picker Grid.Row="2" Grid.Column="1" ItemsSource="{Binding IssueTypes}" SelectedItem="{Binding Company.IssueType}" />
 
-                <!-- Row 3: Issue Type -->
-                <Label Text="Issue Type" Grid.Row="3" Grid.Column="0" VerticalOptions="Center"/>
-                <Picker Grid.Row="3" Grid.Column="1" ItemsSource="{Binding IssueTypes}" SelectedItem="{Binding Company.IssueType}" />
+                <!-- Row 3: Exchange -->
+                <Label Text="Exchange" Grid.Row="3" Grid.Column="0" VerticalOptions="Center"/>
+                <Picker Grid.Row="3" Grid.Column="1" ItemsSource="{Binding Exchanges}" SelectedItem="{Binding Company.Exchange}" />
 
-                <!-- Row 4: Exchange -->
-                <Label Text="Exchange" Grid.Row="4" Grid.Column="0" VerticalOptions="Center"/>
-                <Picker Grid.Row="4" Grid.Column="1" ItemsSource="{Binding Exchanges}" SelectedItem="{Binding Company.Exchange}" />
+                <!-- Row 4: Issue Size -->
+                <Label Text="Issue Size (Shares)" Grid.Row="4" Grid.Column="0" VerticalOptions="Center"/>
+                <Entry Grid.Row="4" Grid.Column="1" Text="{Binding Company.IssueSize}" Keyboard="Numeric" />
 
-                <!-- Row 5: Issue Size -->
-                <Label Text="Issue Size (Shares)" Grid.Row="5" Grid.Column="0" VerticalOptions="Center"/>
-                <Entry Grid.Row="5" Grid.Column="1" Text="{Binding Company.IssueSize}" Keyboard="Numeric" />
+                <!-- Row 5: Face Value -->
+                <Label Text="Face Value (₹)" Grid.Row="5" Grid.Column="0" VerticalOptions="Center"/>
+                <Entry Grid.Row="5" Grid.Column="1" Text="{Binding Company.FaceValue}" Keyboard="Numeric" />
 
-                <!-- Row 6: Face Value -->
-                <Label Text="Face Value (₹)" Grid.Row="6" Grid.Column="0" VerticalOptions="Center"/>
-                <Entry Grid.Row="6" Grid.Column="1" Text="{Binding Company.FaceValue}" Keyboard="Numeric" />
+                <!-- Row 6: Issue Price -->
+                <Label Text="Issue Price / Share (₹)" Grid.Row="6" Grid.Column="0" VerticalOptions="Center"/>
+                <Entry Grid.Row="6" Grid.Column="1" Text="{Binding Company.IssuePrice}" Keyboard="Numeric" />
 
-                <!-- Row 7: Issue Price -->
-                <Label Text="Issue Price / Share (₹)" Grid.Row="7" Grid.Column="0" VerticalOptions="Center"/>
-                <Entry Grid.Row="7" Grid.Column="1" Text="{Binding Company.IssuePrice}" Keyboard="Numeric" />
-
-                <!-- Row 8: Floor Price / Cap Price -->
-                <Label Text="Floor Price (₹)" Grid.Row="8" Grid.Column="0" VerticalOptions="Center"/>
-                <Grid Grid.Row="8" Grid.Column="1" ColumnDefinitions="*,Auto,*" ColumnSpacing="8">
+                <!-- Row 7: Floor Price / Cap Price -->
+                <Label Text="Floor Price (₹)" Grid.Row="7" Grid.Column="0" VerticalOptions="Center"/>
+                <Grid Grid.Row="7" Grid.Column="1" ColumnDefinitions="*,Auto,*" ColumnSpacing="8">
                     <Entry Grid.Column="0" Text="{Binding Company.FloorPrice}" Keyboard="Numeric" Placeholder="Floor" />
                     <Label Grid.Column="1" Text="→ Cap:" VerticalOptions="Center" />
                     <Entry Grid.Column="2" Text="{Binding Company.CapPrice}" Keyboard="Numeric" Placeholder="Ceiling" />
                 </Grid>
 
-                <!-- Row 9: Min Lot Size -->
-                <Label Text="Min Lot Size" Grid.Row="9" Grid.Column="0" VerticalOptions="Center"/>
-                <Entry Grid.Row="9" Grid.Column="1" Text="{Binding Company.MinLotSize}" Keyboard="Numeric" />
+                <!-- Row 8: Min Lot Size -->
+                <Label Text="Min Lot Size" Grid.Row="8" Grid.Column="0" VerticalOptions="Center"/>
+                <Entry Grid.Row="8" Grid.Column="1" Text="{Binding Company.MinLotSize}" Keyboard="Numeric" />
 
-                <!-- Row 10: Max Apply Net Issue -->
-                <Label Text="Max Apply / Net Issue" Grid.Row="10" Grid.Column="0" VerticalOptions="Center"/>
-                <Entry Grid.Row="10" Grid.Column="1" Text="{Binding Company.MaxApplyNetIssue}" Keyboard="Numeric" />
+                <!-- Row 9: Max Apply Net Issue -->
+                <Label Text="Max Apply / Net Issue" Grid.Row="9" Grid.Column="0" VerticalOptions="Center"/>
+                <Entry Grid.Row="9" Grid.Column="1" Text="{Binding Company.MaxApplyNetIssue}" Keyboard="Numeric" />
 
-                <!-- Row 11: Opening Date -->
-                <Label Text="Opening Date" Grid.Row="11" Grid.Column="0" VerticalOptions="Center"/>
-                <DatePicker Grid.Row="11" Grid.Column="1" Date="{Binding Company.OpeningDate}" Format="dd/MM/yyyy" />
+                <!-- Row 10: Opening Date -->
+                <Label Text="Opening Date" Grid.Row="10" Grid.Column="0" VerticalOptions="Center"/>
+                <DatePicker Grid.Row="10" Grid.Column="1" Date="{Binding Company.OpeningDate}" Format="dd/MM/yyyy" />
 
-                <!-- Row 12: Closing Date -->
-                <Label Text="Closing Date" Grid.Row="12" Grid.Column="0" VerticalOptions="Center"/>
-                <DatePicker Grid.Row="12" Grid.Column="1" Date="{Binding Company.ClosingDate}" Format="dd/MM/yyyy" />
+                <!-- Row 11: Closing Date -->
+                <Label Text="Closing Date" Grid.Row="11" Grid.Column="0" VerticalOptions="Center"/>
+                <DatePicker Grid.Row="11" Grid.Column="1" Date="{Binding Company.ClosingDate}" Format="dd/MM/yyyy" />
 
-                <!-- Row 13: Lead Manager 1 -->
-                <Label Text="Lead Manager 1" Grid.Row="13" Grid.Column="0" VerticalOptions="Center"/>
-                <Entry Grid.Row="13" Grid.Column="1" Text="{Binding Company.LeadManager1}" />
+                <!-- Row 12: Lead Manager 1 -->
+                <Label Text="Lead Manager 1" Grid.Row="12" Grid.Column="0" VerticalOptions="Center"/>
+                <Entry Grid.Row="12" Grid.Column="1" Text="{Binding Company.LeadManager1}" />
 
-                <!-- Row 14: Lead Manager 2 -->
-                <Label Text="Lead Manager 2" Grid.Row="14" Grid.Column="0" VerticalOptions="Center"/>
-                <Entry Grid.Row="14" Grid.Column="1" Text="{Binding Company.LeadManager2}" />
+                <!-- Row 13: Lead Manager 2 -->
+                <Label Text="Lead Manager 2" Grid.Row="13" Grid.Column="0" VerticalOptions="Center"/>
+                <Entry Grid.Row="13" Grid.Column="1" Text="{Binding Company.LeadManager2}" />
 
-                <!-- Row 15: Offer For Sale -->
-                <Label Text="Offer For Sale" Grid.Row="15" Grid.Column="0" VerticalOptions="Center"/>
-                <HorizontalStackLayout Grid.Row="15" Grid.Column="1" Spacing="12" VerticalOptions="Center">
-                    <CheckBox IsChecked="{Binding Company.OfferForSale}" />
-                    <Label Text="{Binding OfferForSaleLabel}" VerticalOptions="Center" />
-                </HorizontalStackLayout>
+                <!-- Row 14: Offer For Sale (Numeric Input) -->
+                <Label Text="Offer For Sale" Grid.Row="14" Grid.Column="0" VerticalOptions="Center"/>
+                <Entry Grid.Row="14" Grid.Column="1" Text="{Binding Company.OfferForSale}" Keyboard="Numeric" Placeholder="Enter Offer For Sale (number of shares)" />
             </Grid>
 
             <HorizontalStackLayout Spacing="10" Margin="0,10,0,0">
